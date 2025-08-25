@@ -1,3 +1,6 @@
+![Alt text]([https://github.com/JBW-byte/Screenshots/blob/main/hyprland%20waybar.png](https://raw.githubusercontent.com/JBW-byte/Mame-BGFX-Reshade/refs/heads/main/vwuwyv2fltse1.webp) "Preview")
+
+
 # Mame-BGFX-Reshade
 Scanlines, image and brightness with reshade. Will require dedicated GFX card or recent onboard. can run bgfx only for performance. can use with HLSL as well.
 
