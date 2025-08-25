@@ -1,4 +1,4 @@
-![Alt text](https://github.com/JBW-byte/Mame-BGFX-Reshade/blob/main/vwuwyv2fltse1.webp) "Preview")
+![Alt text](https://github.com/JBW-byte/Mame-BGFX-Reshade/blob/main/vwuwyv2fltse1.webp)
 
 
 # Mame-BGFX-Reshade
