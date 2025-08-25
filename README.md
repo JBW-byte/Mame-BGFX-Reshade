@@ -8,10 +8,10 @@ mame .268+ Aug 2024 (may work with earlier versions), crt-geom-deluxe.json https
 
 set bgfx in mame video settings and select crt-geom-deluxe as the screen chain(effect) in your mame.ini or front end settings.
 
-OSD VIDEO OPTIONS
+# OSD VIDEO OPTIONS
 video bgfx
 
-BGFX POST-PROCESSING OPTIONS
+# BGFX POST-PROCESSING OPTIONS
 bgfx_screen_chains crt-geom-deluxe
 
 REshade - make a copy of your mame folder to try this out, download reshade and install using the mame.exe as the game to install, select direct3d 10/11/12, install all the ticked files*, when it says succeeded! in top left you can just close the installer.
