@@ -1,4 +1,4 @@
-![Alt text]([https://github.com/JBW-byte/Screenshots/blob/main/hyprland%20waybar.png](https://raw.githubusercontent.com/JBW-byte/Mame-BGFX-Reshade/refs/heads/main/vwuwyv2fltse1.webp) "Preview")
+![Alt text](https://github.com/JBW-byte/Mame-BGFX-Reshade/blob/main/vwuwyv2fltse1.webp) "Preview")
 
 
 # Mame-BGFX-Reshade
