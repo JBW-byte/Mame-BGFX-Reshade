@@ -66,26 +66,13 @@ Install all default shaders, *install the extra shader crt_royal-reshade by akgu
 
 When “Succeeded!” appears in the top-left, close installer  
 
-
-  
-
-## 👉 To use CRT Royale (by akgunter):  
-
-When “Succeeded!” appears in the top-left, close installer
-
-## 👉 To use CRT Royale (by akgunter):  
-
-Install crt_royal-reshade shader
-
-Enable crt-royale.fx in ReShade
-
 Note: Gorgeous results, but demanding on performance  
 
 
 
 ## 🎛️ ReShade Preset (Updated Apr 2025)  
 
-📥 Download here
+📥 [Download here](https://drive.google.com/file/d/1OiYts_8r1J3BZmyIzAopg3_uqjvnASfe/view?usp=sharing)
 
 Press Home to open the ReShade menu
 
@@ -93,9 +80,6 @@ Load the preset
 
 Adjust brightness/contrast as needed (depends on your monitor & game defaults)  
 
-
-
-Adjust brightness/contrast as needed (depends on your monitor & game defaults)
 
 
 ## 🖼️ Visual Notes
