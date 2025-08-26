@@ -12,8 +12,6 @@ CRT-style scanlines & glow
 
 Brightness & image tuning
 
-Works with BGFX only for performance, or combine with HLSL
-
 Includes crt-geom-deluxe chain as a ready-to-use preset
 
 Optional CRT-Royale (ReShade) for extra realism (heavy on performance)  
