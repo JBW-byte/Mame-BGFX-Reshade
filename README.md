@@ -88,19 +88,5 @@ Uses Delta 4x2.rgb mask in BGFX → subtle, natural RGB pattern
 
 All settings are kept lightweight to balance performance & visuals
 
-Extra tweaking available via in-game TAB → Slider Settings  
-
-
-
-Extra tweaking available via in-game TAB → Slider Settings
-
-
-## 💡 Tips
-
-Experiment with scanline intensity & masks for your monitor
-
-Use HLSL + BGFX for a hybrid look
-
-
-ReShade CRT Royale looks best on high-res monitors (but hits FPS)  
+Extra tweaking available via in-game TAB → Slider Settings.
 
