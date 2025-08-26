@@ -44,10 +44,10 @@ mame\bgfx\chains
 
 Edit your mame.ini (or frontend settings) to enable:
 
-OSD VIDEO OPTIONS
-video bgfx
+OSD VIDEO OPTIONS  
+video bgfx  
 
-BGFX POST-PROCESSING OPTIONS
+BGFX POST-PROCESSING OPTIONS  
 bgfx_screen_chains crt-geom-deluxe
 
 
