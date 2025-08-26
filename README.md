@@ -73,7 +73,7 @@ Load the preset
 Place file in mame\reshade-shaders <img width="1200" height="675" alt="image" src="https://github.com/user-attachments/assets/4421e315-5b07-4902-b81d-18f2952f5ad7" />
 
 
-Adjust brightness/contrast in the tab menu(Slider Settings) (These settings depend on your monitor settings and the game defaults for brightness and contrast in many cases.)  
+Adjust brightness/contrast in the tab menu(Slider Control) (These settings depend on your monitor settings and the game defaults for brightness and contrast in many cases.)  
 
 
 
@@ -83,7 +83,7 @@ Uses Delta 4x2.rgb mask in BGFX → subtle, natural RGB pattern
 
 All settings are kept lightweight to balance performance & visuals
 
-Extra tweaking available via in-game TAB → Slider Settings.  
+Extra tweaking available via Mame in-game TAB → Slider Control and ReShade Home key.  
 
  ![Screenshot April 2025](https://github.com/JBW-byte/Mame-BGFX-Reshade/blob/main/Neon_mame_banner.png)
 
