@@ -3,13 +3,10 @@
 
 
 Bring authentic CRT vibes back to your MAME experience!
-This setup combines BGFX screen chains with ReShade shaders for customizable scanlines, brightness, and image effects. Perfect for retro gaming enthusiasts who want that classic arcade look.
+This setup combines BGFX screen chains with ReShade shaders for customizable scanlines, brightness, and image effects. Perfect for retro gaming enthusiasts who want that classic arcade look.  
 
 
-
-
-<<<<<<<
-✨ Features
+## ✨ Features
 
 CRT-style scanlines & glow
 
@@ -23,7 +20,7 @@ Optional CRT-Royale (ReShade) for extra realism (heavy on performance)
 
 
 
-⚙️ Requirements
+## ⚙️ Requirements
 
 MAME .268+ (Aug 2024 build recommended)
 
