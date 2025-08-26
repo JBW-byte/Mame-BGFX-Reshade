@@ -49,23 +49,25 @@ video bgfx
 
 BGFX POST-PROCESSING OPTIONS  
 bgfx_screen_chains crt-geom-deluxe  
+
   
     
 ### 2. ReShade (Optional but Recommended)
 
 Backup your MAME folder
 
-Download ReShade
+Download [ReShade](https://reshade.me/) 
 
 Run installer → point to mame.exe
 
 Choose Direct3D 10/11/12
 
-Install all default shaders
+Install all default shaders, *install the extra shader crt_royal-reshade by akgunter to try this new port of CRT Royal on its own or on top of my settings, turn on crt-royale.fx in reshade. it looks good but uses a lot of performance.
 
 When “Succeeded!” appears in the top-left, close installer  
 
 
+  
 
 ## 👉 To use CRT Royale (by akgunter):  
 
