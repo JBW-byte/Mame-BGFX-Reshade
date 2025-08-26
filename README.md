@@ -35,7 +35,7 @@ Windows with Direct3D 10/11/12 support
 
 1. BGFX (MAME Built-in)
 
-Download crt-geom-deluxe.json
+Download [crt-geom-deluxe.json](https://drive.google.com/file/d/1S9rYcUZEVSiZcKPovk4OlVwTiCqhsr16/view?usp=sharing).
 
 Place it in:
 
@@ -44,50 +44,10 @@ mame\bgfx\chains
 
 Edit your mame.ini (or frontend settings) to enable:
 
+OSD VIDEO OPTIONS
 video bgfx
-bgfx_screen_chains crt-geom-deluxe  
 
-
-Bring authentic CRT vibes back to your MAME experience!
-This setup combines BGFX screen chains with ReShade shaders for customizable scanlines, brightness, and image effects. Perfect for retro gaming enthusiasts who want that classic arcade look.
-
-
-
-## ✨ Features
-
-CRT-style scanlines & glow
-
-Brightness & image tuning
-
-Works with BGFX only for performance, or combine with HLSL
-
-Includes crt-geom-deluxe chain as a ready-to-use preset
-
-Optional CRT-Royale (ReShade) for extra realism (heavy on performance)  
-
-
-## ⚙️ Requirements
-
-MAME .268+ (Aug 2024 build recommended)
-
-Dedicated GPU or modern onboard graphics
-
-Windows with Direct3D 10/11/12 support  
-
-
-## 🔧 Setup Instructions
-1. BGFX (MAME Built-in)
-
-Download crt-geom-deluxe.json
-
-Place it in:
-
-mame\bgfx\chains
-
-
-Edit your mame.ini (or frontend settings) to enable:
-
-video bgfx
+BGFX POST-PROCESSING OPTIONS
 bgfx_screen_chains crt-geom-deluxe
 
 
