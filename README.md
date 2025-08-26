@@ -33,7 +33,7 @@ Windows with Direct3D 10/11/12 support
 
 ## 🔧 Setup Instructions  
 
-1. BGFX (MAME Built-in)
+### 1. BGFX (MAME Built-in)
 
 Download [crt-geom-deluxe.json](https://drive.google.com/file/d/1S9rYcUZEVSiZcKPovk4OlVwTiCqhsr16/view?usp=sharing).
 
@@ -48,11 +48,10 @@ OSD VIDEO OPTIONS
 video bgfx  
 
 BGFX POST-PROCESSING OPTIONS  
-bgfx_screen_chains crt-geom-deluxe
-
-
-
-2. ReShade (Optional but Recommended)
+bgfx_screen_chains crt-geom-deluxe  
+  
+    
+### 2. ReShade (Optional but Recommended)
 
 Backup your MAME folder
 
