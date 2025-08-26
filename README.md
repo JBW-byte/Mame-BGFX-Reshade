@@ -70,7 +70,7 @@ When “Succeeded!” appears in the top-left, close installer
 Press Home to open the ReShade menu in-game
 Load the preset  
 
-Place file in mame\reshade-shaders <img width="1600" height="900" alt="image" src="https://github.com/user-attachments/assets/4421e315-5b07-4902-b81d-18f2952f5ad7" />
+Place file in mame\reshade-shaders <img width="1200" height="675" alt="image" src="https://github.com/user-attachments/assets/4421e315-5b07-4902-b81d-18f2952f5ad7" />
 
 
 Adjust brightness/contrast in the tab menu(Slider Settings) (These settings depend on your monitor settings and the game defaults for brightness and contrast in many cases.)  
