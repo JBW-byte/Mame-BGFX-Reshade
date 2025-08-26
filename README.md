@@ -62,11 +62,9 @@ Run installer → point to mame.exe
 
 Choose Direct3D 10/11/12
 
-Install all default shaders, *install the extra shader crt_royal-reshade by akgunter to try this new port of CRT Royal on its own or on top of my settings, turn on crt-royale.fx in reshade. it looks good but uses a lot of performance.
+Install all default shaders, *install the extra shader crt_royal-reshade by akgunter, turn on crt-royale.fx in reshade. it looks good but uses a lot of performance.
 
 When “Succeeded!” appears in the top-left, close installer  
-
-Note: Gorgeous results, but demanding on performance  
 
 
 
@@ -74,11 +72,11 @@ Note: Gorgeous results, but demanding on performance
 
 📥 [Download here](https://drive.google.com/file/d/1OiYts_8r1J3BZmyIzAopg3_uqjvnASfe/view?usp=sharing)
 
-Press Home to open the ReShade menu
+Press Home to open the ReShade menu in-game
 
 Load the preset
 
-Adjust brightness/contrast as needed (depends on your monitor & game defaults)  
+Adjust brightness/contrast in the tab menu(Slider Settings) (These settings depend on your monitor settings and the game defaults for brightness and contrast in many cases.)  
 
 
 
