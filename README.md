@@ -26,9 +26,9 @@ Dedicated GPU or modern onboard graphics
 
 Windows with Direct3D 10/11/12 support  
 
-  ![Screenshot April 2025]([https://myoctocat.com/assets/images/base-octocat.svg](https://raw.githubusercontent.com/JBW-byte/Mame-BGFX-Reshade/refs/heads/main/ye4jrgrdltse1.webp)
+  ![Screenshot April 2025](https://github.com/JBW-byte/Mame-BGFX-Reshade/blob/main/vwuwyv2fltse1.webp)
 
-  ![Screenshot April 2025]([https://myoctocat.com/assets/images/base-octocat.svg](https://raw.githubusercontent.com/JBW-byte/Mame-BGFX-Reshade/refs/heads/main/vwuwyv2fltse1.webp)
+  ![Screenshot April 2025](https://github.com/JBW-byte/Mame-BGFX-Reshade/blob/main/ye4jrgrdltse1.webp)
 
 
 ## 🔧 Setup Instructions  
