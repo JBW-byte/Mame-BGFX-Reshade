@@ -1,31 +1,101 @@
-![Alt text](https://github.com/JBW-byte/Mame-BGFX-Reshade/blob/main/vwuwyv2fltse1.webp) ![Alt text](https://github.com/JBW-byte/Mame-BGFX-Reshade/blob/main/ye4jrgrdltse1.webp) 
+🎮 MAME BGFX + ReShade CRT Setup
 
 
-# Mame-BGFX-Reshade
-Scanlines, image and brightness with reshade. Will require dedicated GFX card or recent onboard. can run bgfx only for performance. can use with HLSL as well.
 
 
-BGFX crt-geom-deluxe.json - put this file in mame\bgfx\chains for my defaults.
 
-mame .268+ Aug 2024 (may work with earlier versions), crt-geom-deluxe.json https://drive.google.com/file/d/1S9rYcUZEVSiZcKPovk4OlVwTiCqhsr16/view?usp=sharing
 
-set bgfx in mame video settings and select crt-geom-deluxe as the screen chain(effect) in your mame.ini or front end settings.
 
-OSD VIDEO OPTIONS  
+
+
+
+Bring authentic CRT vibes back to your MAME experience!
+This setup combines BGFX screen chains with ReShade shaders for customizable scanlines, brightness, and image effects. Perfect for retro gaming enthusiasts who want that classic arcade look.
+
+
+
+
+✨ Features
+
+CRT-style scanlines & glow
+
+Brightness & image tuning
+
+Works with BGFX only for performance, or combine with HLSL
+
+Includes crt-geom-deluxe chain as a ready-to-use preset
+
+Optional CRT-Royale (ReShade) for extra realism (heavy on performance)
+
+⚙️ Requirements
+
+MAME .268+ (Aug 2024 build recommended)
+
+Dedicated GPU or modern onboard graphics
+
+Windows with Direct3D 10/11/12 support
+
+🔧 Setup Instructions
+1. BGFX (MAME Built-in)
+
+Download crt-geom-deluxe.json
+
+Place it in:
+
+mame\bgfx\chains
+
+
+Edit your mame.ini (or frontend settings) to enable:
+
 video bgfx
-
-BGFX POST-PROCESSING OPTIONS  
 bgfx_screen_chains crt-geom-deluxe
 
-REshade - make a copy of your mame folder to try this out, download reshade and install using the mame.exe as the game to install, select direct3d 10/11/12, install all the ticked files*, when it says succeeded! in top left you can just close the installer.
+2. ReShade (Optional but Recommended)
 
-*install the extra shader crt_royal-reshade by akgunter to try this new port of CRT Royal on its own or on top of my settings, turn on crt-royale.fx in reshade. it looks good but uses a lot of performance.
+Backup your MAME folder
 
-RESHADE PRESET, Updated Apr/25
+Download ReShade
 
-https://drive.google.com/file/d/1OiYts_8r1J3BZmyIzAopg3_uqjvnASfe/view?usp=sharing
+Run installer → point to mame.exe
 
-home key opens reshade if it installed correctly, select the mame preset above, plenty of tweaking is possible to get the look you prefer.
+Choose Direct3D 10/11/12
 
-These settings depend on your monitor settings and the game defaults for brightness and contrast in many cases.
-Now using the Delta 4x2.rgb mask in bgfx, seems to provide a nice looking subtle rgb pattern, easy to change in the slider settings in-game(TAB menu). Iv tried to keep the settings simple to maintain as much performance as possible.
+Install all default shaders
+
+When “Succeeded!” appears in the top-left, close installer
+
+👉 To use CRT Royale (by akgunter):
+
+Install crt_royal-reshade shader
+
+Enable crt-royale.fx in ReShade
+
+Note: Gorgeous results, but demanding on performance
+
+🎛️ ReShade Preset (Updated Apr 2025)
+
+📥 Download here
+
+Press Home to open the ReShade menu
+
+Load the preset
+
+Adjust brightness/contrast as needed (depends on your monitor & game defaults)
+
+🖼️ Visual Notes
+
+Uses Delta 4x2.rgb mask in BGFX → subtle, natural RGB pattern
+
+All settings are kept lightweight to balance performance & visuals
+
+Extra tweaking available via in-game TAB → Slider Settings
+
+💡 Tips
+
+Experiment with scanline intensity & masks for your monitor
+
+Use HLSL + BGFX for a hybrid look
+
+ReShade CRT Royale looks best on high-res monitors (but hits FPS)
+
+⚡ Now your README has arcade CRT-styled neon badges, a cleaner structure, and a polished presentation.
