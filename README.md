@@ -120,10 +120,6 @@ Note: Gorgeous results, but demanding on performance
 
 ## 🎛️ ReShade Preset (Updated Apr 2025)  
 
-=======
-## 🎛️ ReShade Preset (Updated Apr 2025)  
->>>>>>> 9a5bb2bd8fda227ab5806d1eee40d1ddbbc465a6
-
 📥 Download here
 
 Press Home to open the ReShade menu
@@ -158,15 +154,4 @@ Use HLSL + BGFX for a hybrid look
 
 
 ReShade CRT Royale looks best on high-res monitors (but hits FPS)  
-
-
-## ⚡ Now your README has arcade CRT-styled neon badges, a cleaner structure, and a polished presentation.
-
-
-ReShade CRT Royale looks best on high-res monitors (but hits FPS)  
-
-
-## ⚡ Now your README has arcade CRT-styled neon badges, a cleaner structure, and a polished presentation.
-
-ReShade CRT Royale looks best on high-res monitors (but hits FPS)
 
