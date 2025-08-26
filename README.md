@@ -1,4 +1,4 @@
-# 🎮 #MAME BGFX + ReShade CRT Setup
+# 🎮 MAME BGFX + ReShade Scanline CRT Setup
 
 
 
@@ -86,5 +86,7 @@ Uses Delta 4x2.rgb mask in BGFX → subtle, natural RGB pattern
 
 All settings are kept lightweight to balance performance & visuals
 
-Extra tweaking available via in-game TAB → Slider Settings.
+Extra tweaking available via in-game TAB → Slider Settings.  
+
+ ![Screenshot April 2025](https://github.com/JBW-byte/Mame-BGFX-Reshade/blob/main/vwuwyv2fltse1.webp)
 
