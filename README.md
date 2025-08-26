@@ -32,10 +32,7 @@ Windows with Direct3D 10/11/12 support
 
 Download [crt-geom-deluxe.json](https://drive.google.com/file/d/1S9rYcUZEVSiZcKPovk4OlVwTiCqhsr16/view?usp=sharing).
 
-Place it in:
-
-mame\bgfx\chains
-
+Place it in: mame\bgfx\chains  
 
 Edit your mame.ini (or frontend settings) to enable:
 
