@@ -8,11 +8,8 @@ This setup combines BGFX screen chains with ReShade shaders for customizable sca
 
 
 
-<<<<<<< HEAD
+<<<<<<<
 ✨ Features
-=======
-✨ #Features
->>>>>>> 9a5bb2bd8fda227ab5806d1eee40d1ddbbc465a6
 
 CRT-style scanlines & glow
 
@@ -26,7 +23,7 @@ Optional CRT-Royale (ReShade) for extra realism (heavy on performance)
 
 
 
-⚙️ #Requirements
+⚙️ Requirements
 
 MAME .268+ (Aug 2024 build recommended)
 
@@ -36,7 +33,7 @@ Windows with Direct3D 10/11/12 support
 
 
 
-🔧 #Setup Instructions  
+🔧 Setup Instructions  
 
 1. BGFX (MAME Built-in)
 
