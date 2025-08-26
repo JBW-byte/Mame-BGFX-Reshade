@@ -47,7 +47,7 @@ bgfx_screen_chains crt-geom-deluxe
 
   
     
-### 2. ReShade (Optional but Recommended)
+### 2. ReShade
 
 Backup your MAME folder
 
