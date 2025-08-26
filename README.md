@@ -8,10 +8,10 @@ This setup combines BGFX screen chains with ReShade shaders for customizable sca
 
 ## ✨ Features
 
-CRT-style scanlines & glow  
-Brightness & image tuning  
-Includes crt-geom-deluxe chain as a ready-to-use preset  
-Optional CRT-Royale (ReShade) for extra realism (heavy on performance)  
+- CRT-style scanlines & glow  
+- Brightness & image tuning  
+- Includes crt-geom-deluxe chain as a ready-to-use preset  
+- Optional CRT-Royale (ReShade) for extra realism (heavy on performance)  
 
 
 
