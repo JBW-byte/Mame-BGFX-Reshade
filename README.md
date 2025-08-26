@@ -21,11 +21,12 @@ MAME .268+ (Aug 2024 build recommended)
 Dedicated GPU or modern onboard graphics  
 Windows with Direct3D 10/11/12 support  
 
+  
   ![Screenshot April 2025](https://github.com/JBW-byte/Mame-BGFX-Reshade/blob/main/vwuwyv2fltse1.webp)
 
-  ![Screenshot April 2025](https://github.com/JBW-byte/Mame-BGFX-Reshade/blob/main/ye4jrgrdltse1.webp)
+  ![Screenshot April 2025](https://github.com/JBW-byte/Mame-BGFX-Reshade/blob/main/ye4jrgrdltse1.webp)  
 
-
+    
 ## 🔧 Setup Instructions  
 
 ### 1. BGFX (MAME Built-in)
@@ -54,7 +55,7 @@ Run installer → point to mame.exe
 
 Choose Direct3D 10/11/12
 
-Install all default shaders, *install the extra shader crt_royal-reshade by akgunter, turn on crt-royale.fx in reshade. it looks good but uses a lot of performance.
+Install all default shaders, *install the extra shader crt_royal-reshade by akgunter, turn on crt-royale.fx in reshade. may need to disable mask in bgfx settings, TAB(Slider Control) in-game, it looks good but uses a lot of performance.
 
 When “Succeeded!” appears in the top-left, close installer  
 
