@@ -22,9 +22,9 @@ Dedicated GPU or modern onboard graphics
 Windows with Direct3D 10/11/12 support  
 
   
-  ![Screenshot April 2025](https://github.com/JBW-byte/Mame-BGFX-Reshade/blob/main/vwuwyv2fltse1.webp)
+  ![Screenshot April 2025](https://github.com/JBW-byte/Screenshots/blob/main/sfiii.webp)
 
-  ![Screenshot April 2025](https://github.com/JBW-byte/Mame-BGFX-Reshade/blob/main/ye4jrgrdltse1.webp)  
+  ![Screenshot April 2025](https://github.com/JBW-byte/Screenshots/blob/main/marvelvsSF.webp)  
 
     
 ## 🔧 Setup Instructions  
@@ -83,5 +83,5 @@ All settings are kept lightweight to balance performance & visuals
 
 Extra tweaking available via Mame in-game TAB → Slider Control and ReShade Home key.  
 
- ![Screenshot April 2025](https://github.com/JBW-byte/Mame-BGFX-Reshade/blob/main/Neon_mame_banner.png)
+ ![Screenshot April 2025](https://github.com/JBW-byte/Screenshots/blob/main/Neon_mame_banner.png)
 
