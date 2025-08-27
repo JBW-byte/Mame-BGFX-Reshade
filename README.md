@@ -22,9 +22,8 @@ Dedicated GPU or modern onboard graphics
 Windows with Direct3D 10/11/12 support  
 
   
-  ![Screenshot April 2025](https://github.com/JBW-byte/Screenshots/blob/main/sfiii.webp)
+  ![Screenshot April 2025](https://github.com/JBW-byte/Screenshots/blob/main/sfiii.webp)   ![Screenshot April 2025](https://github.com/JBW-byte/Screenshots/blob/main/marvelvsSF.webp)  
 
-  ![Screenshot April 2025](https://github.com/JBW-byte/Screenshots/blob/main/marvelvsSF.webp)  
 
     
 ## 🔧 Setup Instructions  
