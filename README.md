@@ -32,7 +32,7 @@ Windows with Direct3D 10/11/12 support
 
 ### 1. BGFX (MAME Built-in)
 
-Download [crt-geom-deluxe.json](https://drive.google.com/file/d/1S9rYcUZEVSiZcKPovk4OlVwTiCqhsr16/view?usp=sharing).
+Download [crt-geom-deluxe.json](https://github.com/JBW-byte/Mame-BGFX-Reshade/blob/main/crt-geom-deluxe.json).
 
 Place it in: mame\bgfx\chains  
 
@@ -64,7 +64,7 @@ When “Succeeded!” appears in the top-left, close installer
 
 ## 🎛️ ReShade Preset (Updated Apr 2025)  
 
-📥 [Download here](https://drive.google.com/file/d/1OiYts_8r1J3BZmyIzAopg3_uqjvnASfe/view?usp=sharing)  
+📥 [Download here](https://github.com/JBW-byte/Mame-BGFX-Reshade/blob/main/Mame_preset1.ini)  
 
 Press Home to open the ReShade menu in-game
 Load the preset  
