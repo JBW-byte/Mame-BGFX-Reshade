@@ -72,7 +72,7 @@ Load the preset
 Place file in mame\reshade-shaders <img width="1200" height="675" alt="image" src="https://github.com/user-attachments/assets/4421e315-5b07-4902-b81d-18f2952f5ad7" />
 
 
-Adjust brightness/contrast in the tab menu(Slider Control) (These settings depend on your monitor settings and the game defaults for brightness and contrast in many cases.)  
+Adjust brightness/contrast in the tab menu(Slider Control) (These settings depend on your monitor settings and the game defaults for brightness and contrast in many cases.)turn brightness down a bit and contrast up to 1.1.  
 
 
 
