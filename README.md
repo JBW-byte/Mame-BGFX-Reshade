@@ -72,12 +72,16 @@ Load the preset
 Place file in mame\reshade-shaders <img width="1200" height="675" alt="image" src="https://github.com/user-attachments/assets/4421e315-5b07-4902-b81d-18f2952f5ad7" />
 
 
-In ReSahde settings, DPX strength and Levels black point will have a big effect on the image.
-Adjust brightness/contrast in the tab menu(Slider Control) (These settings depend on your monitor settings and the game defaults for brightness and contrast in some cases.)e.g. Brightness .970, Contrast 1.1, Gamma .800.  
+In ReShade settings, DPX strength and Levels black point will have a big effect on the image.
+
 
 
 
 ## 🖼️ Visual Notes
+
+Adjust brightness/contrast in the Mame tab menu(Slider Control) if too bright in some games, good default Street Fighter II CE e.g. Brightness .970, Contrast 1.1, Gamma .800 
+
+These settings depend on your monitor settings
 
 Uses Delta 4x2.rgb mask in BGFX → subtle, natural RGB pattern
 
