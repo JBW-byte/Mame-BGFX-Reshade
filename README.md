@@ -56,15 +56,15 @@ Run installer → point to mame.exe
 
 Choose Direct3D 10/11/12
 
-Install all default shaders, *install the extra shader crt_royal-reshade by akgunter, turn on crt-royale.fx in reshade. may need to disable mask in bgfx settings, TAB(Slider Control) in-game, it looks good but uses a lot of performance.
-
-When “Succeeded!” appears in the top-left, close installer  
-
+Install all default shaders, *install the extra shader crt_royal-reshade by akgunter.    
+When “Succeeded!” close installer  
 
 
-## 🎛️ ReShade Preset (Updated Apr 2025)  
 
-📥 [Download here](https://github.com/JBW-byte/Mame-BGFX-Reshade/blob/main/Mame_preset1.ini)  
+## 🎛️ ReShade Preset (Updated Sep 2025)  
+
+📥 [Download here - Standard](https://github.com/JBW-byte/Mame-BGFX-Reshade/blob/main/Mame_preset1.ini)  
+📥 [Download here - CRT_Royale](https://github.com/JBW-byte/Mame-BGFX-Reshade/blob/main/Mame_preset-crt_royale.ini) disable mask in bgfx settings, TAB(Slider Control) in-game.  
 
 Press Home to open the ReShade menu in-game
 Load the preset  
@@ -72,7 +72,8 @@ Load the preset
 Place file in mame\reshade-shaders <img width="1200" height="675" alt="image" src="https://github.com/user-attachments/assets/4421e315-5b07-4902-b81d-18f2952f5ad7" />
 
 
-Adjust brightness/contrast in the tab menu(Slider Control) (These settings depend on your monitor settings and the game defaults for brightness and contrast in many cases.)turn brightness down a bit and contrast up to 1.1.  
+In ReSahde settings, DPX strength and Levels black point will have a big effect on the image.
+Adjust brightness/contrast in the tab menu(Slider Control) (These settings depend on your monitor settings and the game defaults for brightness and contrast in some cases.)e.g. Brightness .970, Contrast 1.1, Gamma .800.  
 
 
 
