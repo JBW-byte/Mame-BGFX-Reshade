@@ -19,7 +19,7 @@ Im not claiming to be an expert on the visuals/colors it just looks decent to me
 
 ## ⚙️ Requirements
 
-MAME .268+ (Aug 2024 build recommended)  
+MAME .268+ (recommended)  
 Dedicated GPU or modern onboard graphics  
 Windows with Direct3D 10/11/12 support  
 
