@@ -5,6 +5,8 @@
 Bring authentic CRT vibes back to your MAME experience!
 This setup combines BGFX screen chains with ReShade shaders for customizable scanlines, brightness, and image effects. Perfect for retro gaming enthusiasts who want that classic arcade look.  
 
+Im not claiming to be an expert on the visuals/colors it just looks decent to me.
+
 
 ## ✨ Features
 
