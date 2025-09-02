@@ -66,7 +66,7 @@ When “Succeeded!” close installer
 ## 🎛️ ReShade Preset (Updated Sep 2025)  
 
 📥 [Download here - Standard](https://github.com/JBW-byte/Mame-BGFX-Reshade/blob/main/Mame_preset1.ini)  
-📥 [Download here - CRT_Royale](https://github.com/JBW-byte/Mame-BGFX-Reshade/blob/main/Mame_preset-crt_royale.ini) disable mask in bgfx settings, TAB(Slider Control) in-game.  
+📥 [Download here - CRT_Royal](https://github.com/JBW-byte/Mame-BGFX-Reshade/blob/main/Mame_preset-crt_royal.ini) disable mask in bgfx settings, TAB(Slider Control) in-game.  
 
 Press Home to open the ReShade menu in-game
 Load the preset  
