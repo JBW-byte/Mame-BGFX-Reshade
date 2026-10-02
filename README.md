@@ -14,7 +14,8 @@ Added my custom ReShade Shader, CRT-Mame-Advance-four.fx add to your mame\reshad
 
 - CRT-style scanlines & glow  
 - Brightness & image tuning  
-- Includes crt-geom-deluxe chain as a ready-to-use preset  
+- Includes crt-geom-deluxe chain as a ready-to-use preset
+- Optional my custom made CRT-Mame-Advance-four.fx for ReShade (disable all other options)
 - Optional CRT-Royale (ReShade) for extra realism (heavy on performance)  
 
 
