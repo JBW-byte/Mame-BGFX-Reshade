@@ -62,7 +62,9 @@ Run installer → point to mame.exe
 Choose Direct3D 10/11/12
 
 Install all default shaders, *install the extra shader crt_royal-reshade by akgunter.    
-When “Succeeded!” close installer  
+When “Succeeded!” close installer.
+
+Add CRT-Mame-Advance-four.fx to mame\reshade-shaders\Shaders
 
 
 
