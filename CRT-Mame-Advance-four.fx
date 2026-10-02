@@ -1,6 +1,6 @@
 /*
     ===========================================================================
-    CRT-Mame-Advance.fx (v3.5 Master Edition)
+    CRT-Mame-Advance-four.fx (v3.5 Master Edition) Author L.E.D.
     State-of-the-art CRT simulation engineered specifically for MAME64.
     Pre-configured with user-calibrated master defaults.
 
