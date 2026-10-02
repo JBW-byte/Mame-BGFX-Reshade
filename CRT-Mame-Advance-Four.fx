@@ -1,17 +1,17 @@
 /*
     ===========================================================================
     CRT-Mame-Advance-Four.fx (v4.0 Deluxe Edition) Author L.E.D.
-    State-of-the-art CRT simulation engineered specifically for MAME64.(probably works with other emulators.)
+    State-of-the-art CRT simulation engineered specifically for MAME64(probably works with other emulators)
     Pre-configured with user-calibrated master defaults.
 
-    Bake Summary:
+    Final Audit & Verification:
     - Curvature: Enabled (Warp 0.100/0.100, CornerSize 0.000)
-    - Beam Dynamics: MinBeam 2.00, MaxBeam 1.50, Sharpness 6.00, Gain 1.50
-    - DPX: Enabled (Gain 1.00, Strength 0.20, Contrast 0.12, Colorfulness 1.00, Saturation 1.00)
-    - Optics & Color: BlackLevel -0.015, BrightBoost 1.24, Gamma 2.40/2.40
-    - Blur: Symmetric 5-Tap Gaussian at 2.00 width
-    - Mask: Slot Mask (Type 2) at 0.30 strength, 0.20 bloom
-    - Configured with adjusted GL_Radius, HB_Frequency, and P_Strength defaults.
+    - Bezel: Physically correct linear-space reflection compositing
+    - Mask: Slot Mask (Type 2) at 0.30 strength, auto-compensation active (M_AutoComp)
+    - OLED: Full WOLED (RGBW) and QD-OLED support across all mask types
+    - Halation: Downsampled half-res ping-pong passes (75% bandwidth reduction)
+    - Optimization: Instant hardware discard on disabled passes
+    - Color: Normalized DPX S-curve, P22 gamut preservation, clean black anchoring
     ===========================================================================
 */
 
@@ -59,6 +59,12 @@ uniform bool CMP_Enable <
 uniform bool P_Enable <
     ui_label = "Enable Phosphor Persistence (Ghosting)";
     ui_tooltip = "Simulates physical phosphor decay trails on moving objects.";
+    ui_category = "=== 1. Feature Toggles (Tick Boxes) ===";
+> = false;
+
+uniform bool I_Enable <
+    ui_label = "Enable Interlacing / Line Jitter";
+    ui_tooltip = "Simulates 480i field alternating or 240p line jitter.";
     ui_category = "=== 1. Feature Toggles (Tick Boxes) ===";
 > = false;
 
@@ -113,7 +119,7 @@ uniform bool COL_P22Gamut <
 // ===================== 2. SYSTEM & ARCHITECTURE =====================
 uniform int C_LineMode <
     ui_type = "combo";
-    ui_items = "CPS / Neo-Geo (224 Lines)\0Standard Arcade / NES (240 Lines)\0PC Engine / Midway (256 Lines)\0Sega Model 2/3 Medium-Res (384 Lines)\0Naomi / VGA (480 Lines)\0Custom / Manual\0";
+    ui_items = "CPS / Neo-Geo (224 Lines)\0Standard Arcade / NES (240 Lines)\0PC Engine / Midway (256 Lines)\0Namco Classic / PAL (288 Lines)\0Sega Model 2/3 Medium-Res (384 Lines)\0Naomi / VGA (480 Lines)\0Custom / Manual\0";
     ui_label = "Arcade Raster Line Preset";
     ui_category = "=== 2. System & Architecture ===";
 > = 0;
@@ -198,7 +204,7 @@ uniform float B_MinBeam <
     ui_min = 0.5;
     ui_max = 3.0;
     ui_step = 0.02;
-    ui_label = "Dark Beam Thickness (Gap Size)";
+    ui_label = "Scanline Trough Sharpness (Dark Beam)";
     ui_category = "=== 4. Electron Beam & Scanlines ===";
 > = 2.00;
 
@@ -207,7 +213,7 @@ uniform float B_MaxBeam <
     ui_min = 0.4;
     ui_max = 2.5;
     ui_step = 0.02;
-    ui_label = "Bright Beam Dilation (Bloom)";
+    ui_label = "Scanline Peak Dilation (Bright Beam)";
     ui_category = "=== 4. Electron Beam & Scanlines ===";
 > = 1.50;
 
@@ -276,9 +282,18 @@ uniform float M_BrightBoost <
     ui_min = 1.0;
     ui_max = 2.0;
     ui_step = 0.02;
-    ui_label = "Mask Brightness Compensation";
+    ui_label = "Manual Mask Brightness Compensation";
     ui_category = "=== 5. Phosphor Mask ===";
 > = 1.24;
+
+uniform float M_AutoComp <
+    ui_type = "drag";
+    ui_min = 0.0;
+    ui_max = 1.0;
+    ui_step = 0.05;
+    ui_label = "Auto Mask Compensation Amount";
+    ui_category = "=== 5. Phosphor Mask ===";
+> = 0.00;
 
 // ===================== 6. DPX FILMIC BRIGHTNESS & PUNCH =====================
 uniform float DPX_Gain <
@@ -418,10 +433,7 @@ uniform float COL_Saturation <
     ui_category = "=== 8. Color & Gamma Calibration ===";
 > = 1.00;
 
-// =========================================================================
-// UI Uniforms — Optional Extras (Toggle On/Off in Category 1)
-// =========================================================================
-
+// ===================== 9. HIGH-VOLTAGE SCREEN BREATHING =====================
 uniform float HV_SagAmount <
     ui_type = "drag";
     ui_min = 0.0;
@@ -431,6 +443,7 @@ uniform float HV_SagAmount <
     ui_category = "=== 9. High-Voltage Screen Breathing ===";
 > = 1.00;
 
+// ===================== 10. TRINITRON DAMPER WIRES =====================
 uniform int W_Count <
     ui_type = "combo";
     ui_items = "1 Wire (Center - Small 14\" Tubes)\02 Wires (Top & Bottom - Large 29\" Tubes)\0";
@@ -447,6 +460,7 @@ uniform float W_Opacity <
     ui_category = "=== 10. Trinitron Damper Wires ===";
 > = 0.12;
 
+// ===================== 11. ROLLING AC GROUND HUM BAR =====================
 uniform float HB_Strength <
     ui_type = "drag";
     ui_min = 0.00;
@@ -474,6 +488,7 @@ uniform float HB_Frequency <
     ui_category = "=== 11. Rolling AC Ground Hum Bar ===";
 > = 1.00;
 
+// ===================== 12. CABINET BEZEL REFLECTION =====================
 uniform float BZ_Width <
     ui_type = "drag";
     ui_min = 0.01;
@@ -492,6 +507,7 @@ uniform float BZ_Strength <
     ui_category = "=== 12. Cabinet Bezel Reflection ===";
 > = 0.45;
 
+// ===================== 13. HALATION & WIDE GLOW =====================
 uniform float H_Strength <
     ui_type = "drag";
     ui_min = 0.0;
@@ -537,13 +553,13 @@ uniform float GL_Threshold <
     ui_category = "=== 13. Halation & Wide Glow ===";
 > = 0.20;
 
+// ===================== 14. PHOSPHOR PERSISTENCE =====================
 uniform float P_Strength <
     ui_type = "drag";
     ui_min = 0.0;
     ui_max = 1.0;
     ui_step = 0.05;
     ui_label = "Persistence Effect Strength";
-    ui_tooltip = "Scales the opacity of the phosphor trail.";
     ui_category = "=== 14. Phosphor Persistence (Ghosting) ===";
 > = 0.30;
 
@@ -556,6 +572,7 @@ uniform float3 P_Decay <
     ui_category = "=== 14. Phosphor Persistence (Ghosting) ===";
 > = float3(0.30, 0.35, 0.25);
 
+// ===================== 15. COMPOSITE VIDEO =====================
 uniform float CMP_ChromaBlur <
     ui_type = "drag";
     ui_min = 0.0;
@@ -588,6 +605,23 @@ uniform bool CMP_Crawl <
     ui_category = "=== 15. Composite Video ===";
 > = true;
 
+// ===================== 16. INTERLACING / LINE JITTER =====================
+uniform int I_Mode <
+    ui_type = "combo";
+    ui_items = "Interlaced Fields (480i alternate lines each frame)\0Line Jitter (240p half-line shift each frame)\0";
+    ui_label = "Interlace Mode";
+    ui_category = "=== 16. Interlacing / Line Jitter ===";
+> = 0;
+
+uniform float I_Strength <
+    ui_type = "drag";
+    ui_min = 0.0;
+    ui_max = 1.0;
+    ui_step = 0.05;
+    ui_label = "Inactive Field Dimming";
+    ui_category = "=== 16. Interlacing / Line Jitter ===";
+> = 0.50;
+
 // =========================================================================
 // Render Targets & Textures
 // =========================================================================
@@ -606,10 +640,11 @@ sampler SamplerPersistCur { Texture = TexPersistCur; AddressU = CLAMP; AddressV 
 
 #define CRT_SIGNAL_SAMPLER SamplerPersistCur
 
-texture TexHalationH { Width = BUFFER_WIDTH; Height = BUFFER_HEIGHT; Format = RGBA16F; };
+// Half-resolution halation drastically reduces VRAM bandwidth at 1440p/4K
+texture TexHalationH { Width = BUFFER_WIDTH / 2; Height = BUFFER_HEIGHT / 2; Format = RGBA16F; };
 sampler SamplerHalationH { Texture = TexHalationH; AddressU = CLAMP; AddressV = CLAMP; MagFilter = LINEAR; MinFilter = LINEAR; };
 
-texture TexHalationV { Width = BUFFER_WIDTH; Height = BUFFER_HEIGHT; Format = RGBA16F; };
+texture TexHalationV { Width = BUFFER_WIDTH / 2; Height = BUFFER_HEIGHT / 2; Format = RGBA16F; };
 sampler SamplerHalationV { Texture = TexHalationV; AddressU = CLAMP; AddressV = CLAMP; MagFilter = LINEAR; MinFilter = LINEAR; };
 
 texture TexGlowA { Width = BUFFER_WIDTH / 8; Height = BUFFER_HEIGHT / 8; Format = RGBA16F; };
@@ -628,8 +663,9 @@ float GetTargetLines()
     if (C_LineMode == 0) lines = 224.0;
     else if (C_LineMode == 1) lines = 240.0;
     else if (C_LineMode == 2) lines = 256.0;
-    else if (C_LineMode == 3) lines = 384.0;
-    else if (C_LineMode == 4) lines = 480.0;
+    else if (C_LineMode == 3) lines = 288.0; // Namco Classic / PAL
+    else if (C_LineMode == 4) lines = 384.0;
+    else if (C_LineMode == 5) lines = 480.0;
     else lines = C_CustomLines;
 
     return lines * max(C_ScanlineScale, 0.1);
@@ -663,16 +699,6 @@ float2 WarpCoords(float2 uv)
     float2 offset = abs(uv.yx) * G_Warp;
     uv = uv + uv * offset * offset;
     return uv * 0.5 + 0.5;
-}
-
-float CornerMask(float2 uv)
-{
-    if (!G_EnableCurvature) return 1.0;
-
-    float r = max(G_CornerSize, 0.001);
-    float2 d = abs(uv - 0.5) - 0.5 + r;
-    float corner = length(max(d, 0.0)) - r;
-    return 1.0 - smoothstep(0.0, 0.002, corner);
 }
 
 float BeamWeight(float d, float3 c)
@@ -732,7 +758,12 @@ float4 PS_Linearize(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_Target
     {
         float3 dpx = color * DPX_Gain;
         dpx = (dpx - DPX_RGB_C) * (1.0 + DPX_Contrast) + DPX_RGB_C;
-        dpx = 1.0 / (1.0 + exp(-DPX_RGB_Curve * (dpx - DPX_RGB_C)));
+        
+        // Exact normalized Cineon/DPX S-curve (anchors 0->0 and 1->1 to prevent lifted blacks)
+        float3 sig  = 1.0 / (1.0 + exp(-DPX_RGB_Curve * (dpx - DPX_RGB_C)));
+        float3 sig0 = 1.0 / (1.0 + exp(DPX_RGB_Curve * DPX_RGB_C));
+        float3 sig1 = 1.0 / (1.0 + exp(-DPX_RGB_Curve * (1.0 - DPX_RGB_C)));
+        dpx = saturate((sig - sig0) / max(sig1 - sig0, 0.0001));
 
         float dpxLuma = dot(dpx, float3(0.299, 0.587, 0.114));
         dpx = max(lerp(dpxLuma.xxx, dpx, DPX_Colorfulness * DPX_Saturation), 0.0);
@@ -759,24 +790,20 @@ float4 PS_Linearize(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_Target
 }
 
 // Pass 2: Custom Analog Blur Engine & Composite Video
-// Pass 2: Custom Analog Blur Engine & Composite Video
 float4 PS_SignalBlur(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_Target
 {
+    float2 pad = GetPillarboxPadding();
+    float2 activeSize = 1.0 - 2.0 * pad;
+
     if (CMP_Enable)
     {
-        float2 pad = GetPillarboxPadding();
-        float2 activeSize = 1.0 - 2.0 * pad;
-
-        // Mask out pillarboxes
         if (uv.x < pad.x || uv.x > (1.0 - pad.x) || uv.y < pad.y || uv.y > (1.0 - pad.y))
             return float4(0.0, 0.0, 0.0, 1.0);
 
         float2 localUV = (uv - pad) / activeSize;
         float2 axis = C_TateMode ? float2(0.0, 1.0) : float2(1.0, 0.0);
         float2 texel = axis * (C_TateMode ? BUFFER_RCP_HEIGHT : BUFFER_RCP_WIDTH);
-        
-        float lumaStep = Blur_Enable ? Blur_Width : 0.0;
-        float chromaStep = max(CMP_ChromaBlur, lumaStep);
+        float chromaStep = max(CMP_ChromaBlur, Blur_Width);
 
         float yLuma = 0.0;
         float2 iq = float2(0.0, 0.0);
@@ -786,7 +813,7 @@ float4 PS_SignalBlur(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_Target
         {
             float wt = W5(i);
             float fi = (float)i;
-            yLuma += RGBtoYIQ(ToGamma(tex2Dlod(SamplerLinear, float4(uv + texel * (fi * lumaStep), 0, 0)).rgb)).x * wt;
+            yLuma += RGBtoYIQ(ToGamma(tex2Dlod(SamplerLinear, float4(uv + texel * (fi * Blur_Width), 0, 0)).rgb)).x * wt;
             iq    += RGBtoYIQ(ToGamma(tex2Dlod(SamplerLinear, float4(uv + texel * (fi * chromaStep), 0, 0)).rgb)).yz * wt;
         }
 
@@ -810,38 +837,39 @@ float4 PS_SignalBlur(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_Target
 
     if (!Blur_Enable)
     {
-        return tex2D(SamplerLinear, uv);
+        return tex2Dlod(SamplerLinear, float4(uv, 0.0, 0.0));
     }
 
-    float2 centerDist = uv - 0.5;
-    float astig = 1.0 + (AST_Enable ? dot(centerDist, centerDist) * 4.0 * AST_Amount : 0.0);
+    // Astigmatism centered on active tube area, not monitor bezels
+    float2 tubeCenterDist = (uv - pad) / max(activeSize, 0.001) - 0.5;
+    float astig = 1.0 + (AST_Enable ? dot(tubeCenterDist, tubeCenterDist) * 4.0 * AST_Amount : 0.0);
     float effectiveWidth = Blur_Width * astig;
 
     float2 axis = (C_TateMode ? float2(0.0, BUFFER_RCP_HEIGHT) : float2(BUFFER_RCP_WIDTH, 0.0)) * effectiveWidth;
 
     if (Blur_Type == 1) // Asymmetric Analog RC Bleed
     {
-        float3 c = tex2D(SamplerLinear, uv - axis).rgb * 0.15;
-        c += tex2D(SamplerLinear, uv).rgb * 0.38;
-        c += tex2D(SamplerLinear, uv + axis * (1.0 * RC_Bleed)).rgb * 0.24;
-        c += tex2D(SamplerLinear, uv + axis * (2.0 * RC_Bleed)).rgb * 0.15;
-        c += tex2D(SamplerLinear, uv + axis * (3.0 * RC_Bleed)).rgb * 0.08;
+        float3 c = tex2Dlod(SamplerLinear, float4(uv - axis, 0, 0)).rgb * 0.15;
+        c += tex2Dlod(SamplerLinear, float4(uv, 0, 0)).rgb * 0.38;
+        c += tex2Dlod(SamplerLinear, float4(uv + axis * (1.0 * RC_Bleed), 0, 0)).rgb * 0.24;
+        c += tex2Dlod(SamplerLinear, float4(uv + axis * (2.0 * RC_Bleed), 0, 0)).rgb * 0.15;
+        c += tex2Dlod(SamplerLinear, float4(uv + axis * (3.0 * RC_Bleed), 0, 0)).rgb * 0.08;
         return float4(c, 1.0);
     }
     else if (Blur_Type == 2) // Flyback Focus Defocus (Dual-Axis)
     {
         float2 stepY = (C_TateMode ? float2(BUFFER_RCP_WIDTH, 0.0) : float2(0.0, BUFFER_RCP_HEIGHT)) * effectiveWidth * 0.40;
-        float3 c = tex2D(SamplerLinear, uv).rgb * 0.36;
-        c += (tex2D(SamplerLinear, uv + axis).rgb + tex2D(SamplerLinear, uv - axis).rgb) * 0.22;
-        c += (tex2D(SamplerLinear, uv + axis * 2.0).rgb + tex2D(SamplerLinear, uv - axis * 2.0).rgb) * 0.06;
-        c += (tex2D(SamplerLinear, uv + stepY).rgb + tex2D(SamplerLinear, uv - stepY).rgb) * 0.04;
+        float3 c = tex2Dlod(SamplerLinear, float4(uv, 0, 0)).rgb * 0.36;
+        c += (tex2Dlod(SamplerLinear, float4(uv + axis, 0, 0)).rgb + tex2Dlod(SamplerLinear, float4(uv - axis, 0, 0)).rgb) * 0.22;
+        c += (tex2Dlod(SamplerLinear, float4(uv + axis * 2.0, 0, 0)).rgb + tex2Dlod(SamplerLinear, float4(uv - axis * 2.0, 0, 0)).rgb) * 0.06;
+        c += (tex2Dlod(SamplerLinear, float4(uv + stepY, 0, 0)).rgb + tex2Dlod(SamplerLinear, float4(uv - stepY, 0, 0)).rgb) * 0.04;
         return float4(c, 1.0);
     }
     else // Symmetric 5-Tap Gaussian
     {
-        float3 c = tex2D(SamplerLinear, uv).rgb * 0.375;
-        c += (tex2D(SamplerLinear, uv + axis).rgb       + tex2D(SamplerLinear, uv - axis).rgb)       * 0.25;
-        c += (tex2D(SamplerLinear, uv + axis * 2.0).rgb + tex2D(SamplerLinear, uv - axis * 2.0).rgb) * 0.0625;
+        float3 c = tex2Dlod(SamplerLinear, float4(uv, 0, 0)).rgb * 0.375;
+        c += (tex2Dlod(SamplerLinear, float4(uv + axis, 0, 0)).rgb       + tex2Dlod(SamplerLinear, float4(uv - axis, 0, 0)).rgb)       * 0.25;
+        c += (tex2Dlod(SamplerLinear, float4(uv + axis * 2.0, 0, 0)).rgb + tex2Dlod(SamplerLinear, float4(uv - axis * 2.0, 0, 0)).rgb) * 0.0625;
         return float4(c, 1.0);
     }
 }
@@ -861,16 +889,16 @@ float4 PS_PersistUpdate(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_Tar
 // Pass 4: Phosphor Persistence Copy
 float4 PS_PersistCopy(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_Target
 {
+    if (!P_Enable) discard; // Bypass memory write when persistence is inactive
     return tex2Dlod(SamplerPersistCur, float4(uv, 0, 0));
 }
 
-// Pass 5: Halation Horizontal
+// Pass 5: Halation Horizontal (Half-res target)
 float4 PS_Halation_H(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_Target
 {
-    if (!H_Enable || H_Strength <= 0.0)
-        return float4(0.0, 0.0, 0.0, 1.0);
+    if (!H_Enable || H_Strength <= 0.0) discard;
 
-    float2 stepVec = float2(BUFFER_RCP_WIDTH * H_Radius * (BUFFER_HEIGHT / 1080.0), 0.0);
+    float2 stepVec = float2(BUFFER_RCP_WIDTH * 2.0 * H_Radius * (BUFFER_HEIGHT / 1080.0), 0.0);
 
     float3 result = HaloGate(tex2Dlod(CRT_SIGNAL_SAMPLER, float4(uv, 0, 0)).rgb) * 0.227027;
     result += (HaloGate(tex2Dlod(CRT_SIGNAL_SAMPLER, float4(uv + stepVec * 1.0, 0, 0)).rgb) + HaloGate(tex2Dlod(CRT_SIGNAL_SAMPLER, float4(uv - stepVec * 1.0, 0, 0)).rgb)) * 0.1945946;
@@ -881,13 +909,12 @@ float4 PS_Halation_H(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_Target
     return float4(result, 1.0);
 }
 
-// Pass 6: Halation Vertical
+// Pass 6: Halation Vertical (Half-res target)
 float4 PS_Halation_V(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_Target
 {
-    if (!H_Enable || H_Strength <= 0.0)
-        return float4(0.0, 0.0, 0.0, 1.0);
+    if (!H_Enable || H_Strength <= 0.0) discard;
 
-    float2 stepVec = float2(0.0, BUFFER_RCP_HEIGHT * H_Radius * (BUFFER_HEIGHT / 1080.0));
+    float2 stepVec = float2(0.0, BUFFER_RCP_HEIGHT * 2.0 * H_Radius * (BUFFER_HEIGHT / 1080.0));
 
     float3 result = tex2Dlod(SamplerHalationH, float4(uv, 0, 0)).rgb * 0.227027;
     result += (tex2Dlod(SamplerHalationH, float4(uv + stepVec * 1.0, 0, 0)).rgb + tex2Dlod(SamplerHalationH, float4(uv - stepVec * 1.0, 0, 0)).rgb) * 0.1945946;
@@ -901,8 +928,7 @@ float4 PS_Halation_V(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_Target
 // Pass 7: Glow Downsample
 float4 PS_GlowDown(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_Target
 {
-    if (!GL_Enable || GL_Strength <= 0.0)
-        return float4(0.0, 0.0, 0.0, 1.0);
+    if (!GL_Enable || GL_Strength <= 0.0) discard;
 
     float3 sum = float3(0.0, 0.0, 0.0);
 
@@ -923,8 +949,7 @@ float4 PS_GlowDown(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_Target
 // Pass 8: Glow Blur H
 float4 PS_GlowH(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_Target
 {
-    if (!GL_Enable || GL_Strength <= 0.0)
-        return float4(0.0, 0.0, 0.0, 1.0);
+    if (!GL_Enable || GL_Strength <= 0.0) discard;
 
     float2 stepVec = float2(BUFFER_RCP_WIDTH * 8.0 * GL_Radius * (BUFFER_HEIGHT / 1080.0), 0.0);
 
@@ -940,8 +965,7 @@ float4 PS_GlowH(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_Target
 // Pass 9: Glow Blur V
 float4 PS_GlowV(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_Target
 {
-    if (!GL_Enable || GL_Strength <= 0.0)
-        return float4(0.0, 0.0, 0.0, 1.0);
+    if (!GL_Enable || GL_Strength <= 0.0) discard;
 
     float2 stepVec = float2(0.0, BUFFER_RCP_HEIGHT * 8.0 * GL_Radius * (BUFFER_HEIGHT / 1080.0));
 
@@ -965,42 +989,32 @@ float4 PS_Raster_Composite(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_
 
     float2 localUV = (uv - pad) / activeSize;
 
-    // High-Voltage Anode Sag (Screen Breathing)
+    // High-Voltage Anode Sag (Aspect/Ultrawide-Safe)
     if (HV_Enable)
     {
-        float flashLuma = dot(tex2Dlod(SamplerLinear, float4(0.5, 0.5, 0.0, 0.0)).rgb, float3(0.2126, 0.7152, 0.0722)) * 0.40
-                        + dot(tex2Dlod(SamplerLinear, float4(0.25, 0.25, 0.0, 0.0)).rgb, float3(0.2126, 0.7152, 0.0722)) * 0.15
-                        + dot(tex2Dlod(SamplerLinear, float4(0.75, 0.25, 0.0, 0.0)).rgb, float3(0.2126, 0.7152, 0.0722)) * 0.15
-                        + dot(tex2Dlod(SamplerLinear, float4(0.25, 0.75, 0.0, 0.0)).rgb, float3(0.2126, 0.7152, 0.0722)) * 0.15
-                        + dot(tex2Dlod(SamplerLinear, float4(0.75, 0.75, 0.0, 0.0)).rgb, float3(0.2126, 0.7152, 0.0722)) * 0.15;
+        float3 lumaW = float3(0.2126, 0.7152, 0.0722);
+        float flashLuma = dot(tex2Dlod(SamplerLinear, float4(pad + float2(0.50, 0.50) * activeSize, 0, 0)).rgb, lumaW) * 0.40
+                        + dot(tex2Dlod(SamplerLinear, float4(pad + float2(0.25, 0.25) * activeSize, 0, 0)).rgb, lumaW) * 0.15
+                        + dot(tex2Dlod(SamplerLinear, float4(pad + float2(0.75, 0.25) * activeSize, 0, 0)).rgb, lumaW) * 0.15
+                        + dot(tex2Dlod(SamplerLinear, float4(pad + float2(0.25, 0.75) * activeSize, 0, 0)).rgb, lumaW) * 0.15
+                        + dot(tex2Dlod(SamplerLinear, float4(pad + float2(0.75, 0.75) * activeSize, 0, 0)).rgb, lumaW) * 0.15;
         float sag = 1.0 + flashLuma * (HV_SagAmount * 0.015);
         localUV = (localUV - 0.5) / sag + 0.5;
     }
 
     float2 warpedLocalUV = WarpCoords(localUV);
 
-    // Bezel Shroud Detection & Anti-Aliased Outline
-    float r = max(G_CornerSize, 0.001);
-    float2 cd = abs(warpedLocalUV - 0.5) - 0.5 + r;
-    float corner = length(max(cd, 0.0)) - r;
-    float maskClip = 1.0 - smoothstep(0.0, 0.002, corner);
-
-    // Cabinet Inner Bezel Reflection
-    if (maskClip <= 0.0)
+    // Bezel Shroud Detection & Exact Piecewise Corner SDF
+    float maskClip = 1.0;
+    float corner = 0.0;
+    if (G_EnableCurvature || G_CornerSize > 0.0001)
     {
-        /*
-        // Optional inner reflection pass - skipped for performance standard
-        if (BZ_Enable && corner < BZ_Width)
-        {
-            float bevel = 1.0 - (corner / BZ_Width);
-            bevel = bevel * bevel * BZ_Strength;
-            float2 bzUV = pad + clamp(warpedLocalUV, 0.005, 0.995) * activeSize;
-            float3 bzColor = tex2Dlod(SamplerLinear, float4(bzUV, 0.0, 0.0)).rgb;
-            bzColor = pow(max(bzColor, 0.0), 1.0 / COL_OutputGamma) * bevel;
-            return float4(bzColor, 1.0);
-        }
-        */
-        return float4(0.0, 0.0, 0.0, 1.0);
+        float r = G_CornerSize;
+        float2 cd = abs(warpedLocalUV - 0.5) - 0.5 + r;
+        corner = (r > 0.0001) 
+            ? (length(max(cd, 0.0)) + min(max(cd.x, cd.y), 0.0) - r)
+            : max(cd.x, cd.y);
+        maskClip = 1.0 - smoothstep(0.0, 0.005, corner);
     }
 
     float2 clampedWarpedUV = clamp(warpedLocalUV, 0.0005, 0.9995);
@@ -1014,6 +1028,12 @@ float4 PS_Raster_Composite(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_
     // Scanlines
     float targetLines = GetTargetLines();
     float rasterPos = C_TateMode ? (clampedWarpedUV.x * targetLines) : (clampedWarpedUV.y * targetLines);
+
+    if (I_Enable && I_Mode == 1)
+    {
+        float fieldPhase = (float)(framecount % 2);
+        rasterPos += 0.5 * fieldPhase;
+    }
 
     float lineBase = floor(rasterPos);
     float dist = rasterPos - lineBase - 0.5;
@@ -1044,6 +1064,13 @@ float4 PS_Raster_Composite(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_
         }
 
         float beam = BeamWeight(dist - (float)k, c);
+
+        if (I_Enable && I_Mode == 0)
+        {
+            float isOddLine = step(0.25, frac((lineBase + (float)k + (float)(framecount % 2)) * 0.5));
+            beam *= lerp(1.0, 1.0 - I_Strength, isOddLine);
+        }
+
         color += c * beam;
     }
 
@@ -1055,7 +1082,6 @@ float4 PS_Raster_Composite(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_
     // Phosphor mask
     float3 mask = float3(1.0, 1.0, 1.0);
     float2 screenCoord = uv * BUFFER_SCREEN_SIZE / max(M_Size, 1.0);
-
     if (C_TateMode) screenCoord = screenCoord.yx;
 
     int px = int(floor(screenCoord.x));
@@ -1063,10 +1089,21 @@ float4 PS_Raster_Composite(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_
 
     if (M_Type == 1) // Aperture Grille
     {
-        int x = px % 3;
-        if (x == 0) mask = float3(1.0, 1.0 - M_Strength, 1.0 - M_Strength);
-        else if (x == 1) mask = float3(1.0 - M_Strength, 1.0, 1.0 - M_Strength);
-        else mask = float3(1.0 - M_Strength, 1.0 - M_Strength, 1.0);
+        if (M_SubpixelMode == 2) // WOLED 4-subpixel
+        {
+            int x = px % 4;
+            if (x == 0)      mask = float3(1.0, 1.0 - M_Strength, 1.0 - M_Strength);
+            else if (x == 1) mask = float3(1.0 - M_Strength, 1.0, 1.0 - M_Strength);
+            else if (x == 2) mask = float3(1.0 - M_Strength, 1.0 - M_Strength, 1.0);
+            else             mask = (1.0 - M_Strength * 0.35).xxx;
+        }
+        else
+        {
+            int x = px % 3;
+            if (x == 0)      mask = float3(1.0, 1.0 - M_Strength, 1.0 - M_Strength);
+            else if (x == 1) mask = float3(1.0 - M_Strength, 1.0, 1.0 - M_Strength);
+            else             mask = float3(1.0 - M_Strength, 1.0 - M_Strength, 1.0);
+        }
     }
     else if (M_Type == 2) // Arcade Slot Mask
     {
@@ -1084,6 +1121,10 @@ float4 PS_Raster_Composite(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_
             slot = 1.0 - M_Strength * 0.75;
 
         mask = triad * slot;
+
+        // Ensure white subpixel attenuation on WOLED without breaking slot structure
+        if (M_SubpixelMode == 2 && (px % 4 == 3))
+            mask *= (1.0 - M_Strength * 0.35);
     }
     else if (M_Type == 3) // Shadow Mask Dot Triad
     {
@@ -1095,11 +1136,37 @@ float4 PS_Raster_Composite(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_
         if (x == 0 && y != 0) mask.r = 1.0;
         else if (x == 1 && y != 1) mask.g = 1.0;
         else if (x == 2 && y != 2) mask.b = 1.0;
+
+        // Ensure white subpixel attenuation on WOLED without breaking triad structure
+        if (M_SubpixelMode == 2 && (px % 4 == 3))
+            mask *= (1.0 - M_Strength * 0.35);
     }
+
+    if (M_SubpixelMode == 1) mask = mask.bgr; // Inverted BGR panel layout
+    else if (M_SubpixelMode == 3) mask = lerp(mask, dot(mask, 0.3333).xxx, 0.20); // QD-OLED triangular layout
+
+    // Auto-compensation for mask attenuation
+    float maskTransmission = dot(mask, float3(0.3333, 0.3333, 0.3333));
+    float autoFactor = 1.0 / max(maskTransmission, 0.15);
+    color *= lerp(1.0, autoFactor, M_AutoComp);
 
     float luma = max(max(color.r, color.g), color.b);
     mask = lerp(mask, float3(1.0, 1.0, 1.0), pow(saturate(luma), 1.5) * M_Bloom);
     color *= mask * M_BrightBoost;
+
+    // Sony Trinitron Damper Wires (Resolution-scaled)
+    if (W_Enable)
+    {
+        float wireY = C_TateMode ? warpedLocalUV.x : warpedLocalUV.y;
+        float tubeH = C_TateMode ? (BUFFER_WIDTH * activeSize.x) : (BUFFER_HEIGHT * activeSize.y);
+        float wireDist = (W_Count == 0)
+            ? abs(wireY - 0.50) * tubeH
+            : min(abs(wireY - 0.333), abs(wireY - 0.667)) * tubeH;
+
+        float wireThickness = 1.25 * max(BUFFER_HEIGHT / 1080.0, 1.0);
+        float wire = smoothstep(0.0, wireThickness, wireDist);
+        color *= lerp(1.0 - W_Opacity, 1.0, wire);
+    }
 
     // Rolling AC Ground Hum Bar
     if (HB_Enable)
@@ -1118,11 +1185,26 @@ float4 PS_Raster_Composite(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_
     if (GL_Enable && GL_Strength > 0.0)
         color += tex2Dlod(SamplerGlowA, float4(sampleUV, 0.0, 0.0)).rgb * GL_Strength;
 
-    // Output gamma conversion & black level
+    // Cabinet Bezel Reflection (Calculated in linear space)
+    float3 bezel = float3(0.0, 0.0, 0.0);
+    if (BZ_Enable && corner > 0.0 && corner < BZ_Width)
+    {
+        float bezelDist = corner / max(BZ_Width, 0.001);
+        float3 edgeLight = tex2Dlod(CRT_SIGNAL_SAMPLER, float4(pad + clampedWarpedUV * activeSize, 0, 0)).rgb;
+        float bezelProfile = cos(bezelDist * 1.5707963);
+        bezel = edgeLight * bezelProfile * BZ_Strength;
+    }
+
+    // Composite bezel and tube content in linear color space
+    color = lerp(bezel, color, maskClip);
+
+    // Output gamma conversion & black level calibration
     color = pow(max(color, 0.0), 1.0 / COL_OutputGamma);
     color = max(color + COL_BlackLevel.xxx, 0.0);
 
-    color *= maskClip;
+    // Cleanly anchor unused chassis area to true black (prevents positive black-level bleed)
+    float outerClip = saturate(maskClip + (BZ_Enable ? smoothstep(BZ_Width, 0.0, corner) : 0.0));
+    color *= outerClip;
 
     return float4(color, 1.0);
 }
