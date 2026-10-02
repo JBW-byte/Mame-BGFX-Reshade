@@ -759,6 +759,7 @@ float4 PS_Linearize(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_Target
 }
 
 // Pass 2: Custom Analog Blur Engine & Composite Video
+// Pass 2: Custom Analog Blur Engine & Composite Video
 float4 PS_SignalBlur(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_Target
 {
     if (CMP_Enable)
@@ -766,14 +767,16 @@ float4 PS_SignalBlur(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_Target
         float2 pad = GetPillarboxPadding();
         float2 activeSize = 1.0 - 2.0 * pad;
 
+        // Mask out pillarboxes
         if (uv.x < pad.x || uv.x > (1.0 - pad.x) || uv.y < pad.y || uv.y > (1.0 - pad.y))
             return float4(0.0, 0.0, 0.0, 1.0);
 
         float2 localUV = (uv - pad) / activeSize;
-
         float2 axis = C_TateMode ? float2(0.0, 1.0) : float2(1.0, 0.0);
         float2 texel = axis * (C_TateMode ? BUFFER_RCP_HEIGHT : BUFFER_RCP_WIDTH);
-        float chromaStep = max(CMP_ChromaBlur, Blur_Width);
+        
+        float lumaStep = Blur_Enable ? Blur_Width : 0.0;
+        float chromaStep = max(CMP_ChromaBlur, lumaStep);
 
         float yLuma = 0.0;
         float2 iq = float2(0.0, 0.0);
@@ -783,7 +786,7 @@ float4 PS_SignalBlur(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_Target
         {
             float wt = W5(i);
             float fi = (float)i;
-            yLuma += RGBtoYIQ(ToGamma(tex2Dlod(SamplerLinear, float4(uv + texel * (fi * Blur_Width), 0, 0)).rgb)).x * wt;
+            yLuma += RGBtoYIQ(ToGamma(tex2Dlod(SamplerLinear, float4(uv + texel * (fi * lumaStep), 0, 0)).rgb)).x * wt;
             iq    += RGBtoYIQ(ToGamma(tex2Dlod(SamplerLinear, float4(uv + texel * (fi * chromaStep), 0, 0)).rgb)).yz * wt;
         }
 
@@ -807,7 +810,7 @@ float4 PS_SignalBlur(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_Target
 
     if (!Blur_Enable)
     {
-        return tex2Dlod(SamplerLinear, float4(uv, 0.0, 0.0));
+        return tex2D(SamplerLinear, uv);
     }
 
     float2 centerDist = uv - 0.5;
@@ -818,27 +821,27 @@ float4 PS_SignalBlur(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_Target
 
     if (Blur_Type == 1) // Asymmetric Analog RC Bleed
     {
-        float3 c = tex2Dlod(SamplerLinear, float4(uv - axis, 0, 0)).rgb * 0.15;
-        c += tex2Dlod(SamplerLinear, float4(uv, 0, 0)).rgb * 0.38;
-        c += tex2Dlod(SamplerLinear, float4(uv + axis * (1.0 * RC_Bleed), 0, 0)).rgb * 0.24;
-        c += tex2Dlod(SamplerLinear, float4(uv + axis * (2.0 * RC_Bleed), 0, 0)).rgb * 0.15;
-        c += tex2Dlod(SamplerLinear, float4(uv + axis * (3.0 * RC_Bleed), 0, 0)).rgb * 0.08;
+        float3 c = tex2D(SamplerLinear, uv - axis).rgb * 0.15;
+        c += tex2D(SamplerLinear, uv).rgb * 0.38;
+        c += tex2D(SamplerLinear, uv + axis * (1.0 * RC_Bleed)).rgb * 0.24;
+        c += tex2D(SamplerLinear, uv + axis * (2.0 * RC_Bleed)).rgb * 0.15;
+        c += tex2D(SamplerLinear, uv + axis * (3.0 * RC_Bleed)).rgb * 0.08;
         return float4(c, 1.0);
     }
     else if (Blur_Type == 2) // Flyback Focus Defocus (Dual-Axis)
     {
         float2 stepY = (C_TateMode ? float2(BUFFER_RCP_WIDTH, 0.0) : float2(0.0, BUFFER_RCP_HEIGHT)) * effectiveWidth * 0.40;
-        float3 c = tex2Dlod(SamplerLinear, float4(uv, 0, 0)).rgb * 0.36;
-        c += (tex2Dlod(SamplerLinear, float4(uv + axis, 0, 0)).rgb + tex2Dlod(SamplerLinear, float4(uv - axis, 0, 0)).rgb) * 0.22;
-        c += (tex2Dlod(SamplerLinear, float4(uv + axis * 2.0, 0, 0)).rgb + tex2Dlod(SamplerLinear, float4(uv - axis * 2.0, 0, 0)).rgb) * 0.06;
-        c += (tex2Dlod(SamplerLinear, float4(uv + stepY, 0, 0)).rgb + tex2Dlod(SamplerLinear, float4(uv - stepY, 0, 0)).rgb) * 0.04;
+        float3 c = tex2D(SamplerLinear, uv).rgb * 0.36;
+        c += (tex2D(SamplerLinear, uv + axis).rgb + tex2D(SamplerLinear, uv - axis).rgb) * 0.22;
+        c += (tex2D(SamplerLinear, uv + axis * 2.0).rgb + tex2D(SamplerLinear, uv - axis * 2.0).rgb) * 0.06;
+        c += (tex2D(SamplerLinear, uv + stepY).rgb + tex2D(SamplerLinear, uv - stepY).rgb) * 0.04;
         return float4(c, 1.0);
     }
     else // Symmetric 5-Tap Gaussian
     {
-        float3 c = tex2Dlod(SamplerLinear, float4(uv, 0, 0)).rgb * 0.375;
-        c += (tex2Dlod(SamplerLinear, float4(uv + axis, 0, 0)).rgb       + tex2Dlod(SamplerLinear, float4(uv - axis, 0, 0)).rgb)       * 0.25;
-        c += (tex2Dlod(SamplerLinear, float4(uv + axis * 2.0, 0, 0)).rgb + tex2Dlod(SamplerLinear, float4(uv - axis * 2.0, 0, 0)).rgb) * 0.0625;
+        float3 c = tex2D(SamplerLinear, uv).rgb * 0.375;
+        c += (tex2D(SamplerLinear, uv + axis).rgb       + tex2D(SamplerLinear, uv - axis).rgb)       * 0.25;
+        c += (tex2D(SamplerLinear, uv + axis * 2.0).rgb + tex2D(SamplerLinear, uv - axis * 2.0).rgb) * 0.0625;
         return float4(c, 1.0);
     }
 }
