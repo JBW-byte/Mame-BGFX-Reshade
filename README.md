@@ -8,7 +8,7 @@ This setup combines BGFX screen chains with ReShade shaders for customizable sca
 Im not claiming to be an expert on the visuals/colors it just looks decent to me.
 
 ## ✨ CRT-Mame-Advance-Four
-Added my custom ReShade Shader, CRT-Mame-Advance-four.fx add to your mame\reshade-shaders\Shaders, deselect all other options in reshade and turn off bgfx. Covers most of the settings in one shader, many options.
+Added my custom ReShade Shader, CRT-Mame-Advance-four.fx. Add to mame\reshade-shaders\Shaders folder, deselect all other options in reshade and turn off bgfx. Covers most of the settings in one shader, many options.
 
 
 ## ✨ Features
