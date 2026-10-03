@@ -7,9 +7,6 @@ This setup combines BGFX screen chains with ReShade shaders for customizable sca
 
 Im not claiming to be an expert on the visuals/colors it just looks decent to me.
 
-## ✨ CRT-Mame-Advance-Four
-Added my custom ReShade Shader, CRT-Mame-Advance-four.fx. Add to mame\reshade-shaders\Shaders folder, deselect all other options in reshade and turn off bgfx. Covers most of the settings in one shader, many options.
-
 
 ## ✨ Features
 
@@ -18,6 +15,14 @@ Added my custom ReShade Shader, CRT-Mame-Advance-four.fx. Add to mame\reshade-sh
 - Includes crt-geom-deluxe chain as a ready-to-use preset
 - Optional my custom made CRT-Mame-Advance-four.fx for ReShade (disable all other options)
 - Optional CRT-Royale (ReShade) for extra realism (heavy on performance)  
+
+## ✨ CRT-Mame-Advance-Four
+Added my custom ReShade Shader, CRT-Mame-Advance-four.fx. Add to mame\reshade-shaders\Shaders folder, deselect all other options in reshade and turn off bgfx. Covers most of the settings in one shader, many options.
+
+• Advanced Display Matching: Custom layouts engineered specifically to look correct on standard LCD, WOLED, and QD-OLED screens.
+
+• Authentic CRT Imperfections: Recreates physical tube curvature, scanlines, aperture grille masks, Sony damper wires, high-voltage screen "breathing," and rolling power hum bars.
+
 
 
 
