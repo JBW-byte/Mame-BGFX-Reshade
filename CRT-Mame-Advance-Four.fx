@@ -1,17 +1,11 @@
 /*
     ===========================================================================
-    CRT-Mame-Advance-Four.fx (v4.0 Deluxe Edition) Author L.E.D.
-    State-of-the-art CRT simulation engineered specifically for MAME64(probably works with other emulators)
+    CRT-Mame-Advance-Four.fx (v4.1 Deluxe Edition) Author L.E.D.
+    State-of-the-art CRT simulation engineered specifically for MAME64.
     Pre-configured with user-calibrated master defaults.
 
-    Final Audit & Verification:
-    - Curvature: Enabled (Warp 0.100/0.100, CornerSize 0.000)
-    - Bezel: Physically correct linear-space reflection compositing
-    - Mask: Slot Mask (Type 2) at 0.30 strength, auto-compensation active (M_AutoComp)
-    - OLED: Full WOLED (RGBW) and QD-OLED support across all mask types
-    - Halation: Downsampled half-res ping-pong passes (75% bandwidth reduction)
-    - Optimization: Instant hardware discard on disabled passes
-    - Color: Normalized DPX S-curve, P22 gamut preservation, clean black anchoring
+    - Fully branchless scanline and deconvergence loops.
+    - Native support for bezel pass-through and OLED subpixel matrices.
     ===========================================================================
 */
 
@@ -162,6 +156,12 @@ uniform float2 UI_ManualPad <
     ui_label = "Manual Pillarbox Padding (X / Y)";
     ui_category = "=== 2. System & Architecture ===";
 > = float2(0.125, 0.000);
+
+uniform bool UI_PassThroughBorder <
+    ui_label = "Pass-Through Artwork / Bezels";
+    ui_tooltip = "Preserves original MAME cabinet artwork and side bezels outside the active CRT area instead of forcing black bars.";
+    ui_category = "=== 2. System & Architecture ===";
+> = false;
 
 // ===================== 3. CUSTOM ANALOG BLUR ENGINE =====================
 uniform int Blur_Type <
@@ -663,7 +663,7 @@ float GetTargetLines()
     if (C_LineMode == 0) lines = 224.0;
     else if (C_LineMode == 1) lines = 240.0;
     else if (C_LineMode == 2) lines = 256.0;
-    else if (C_LineMode == 3) lines = 288.0; // Namco Classic / PAL
+    else if (C_LineMode == 3) lines = 288.0;
     else if (C_LineMode == 4) lines = 384.0;
     else if (C_LineMode == 5) lines = 480.0;
     else lines = C_CustomLines;
@@ -710,12 +710,6 @@ float BeamWeight(float d, float3 c)
     return max(g, 0.18 * exp(-2.0 * d * d));
 }
 
-float W5(int i)
-{
-    int a = abs(i);
-    return (a == 0) ? 0.375 : ((a == 1) ? 0.25 : 0.0625);
-}
-
 float3 HaloGate(float3 c)
 {
     float l = max(max(c.r, c.g), c.b);
@@ -727,9 +721,6 @@ float3 GlowGate(float3 c, float threshold)
     float l = max(max(c.r, c.g), c.b);
     return c * smoothstep(threshold, threshold + 0.35, l);
 }
-
-float3 ToGamma(float3 c)   { return pow(max(c, 0.0), 1.0 / COL_InputGamma); }
-float3 FromGamma(float3 c) { return pow(max(c, 0.0), COL_InputGamma); }
 
 float3 RGBtoYIQ(float3 c)
 {
@@ -752,6 +743,12 @@ float3 YIQtoRGB(float3 q)
 // Pass 1: Linearization, DPX Filmic S-Curve & P22 Gamut
 float4 PS_Linearize(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_Target
 {
+    float2 pad = GetPillarboxPadding();
+    if (UI_PassThroughBorder && (uv.x < pad.x || uv.x > (1.0 - pad.x) || uv.y < pad.y || uv.y > (1.0 - pad.y)))
+    {
+        return tex2D(ReShade::BackBuffer, uv);
+    }
+
     float3 color = tex2D(ReShade::BackBuffer, uv).rgb;
 
     if (DPX_Enable)
@@ -759,7 +756,7 @@ float4 PS_Linearize(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_Target
         float3 dpx = color * DPX_Gain;
         dpx = (dpx - DPX_RGB_C) * (1.0 + DPX_Contrast) + DPX_RGB_C;
         
-        // Exact normalized Cineon/DPX S-curve (anchors 0->0 and 1->1 to prevent lifted blacks)
+        // Exact normalized Cineon/DPX S-curve
         float3 sig  = 1.0 / (1.0 + exp(-DPX_RGB_Curve * (dpx - DPX_RGB_C)));
         float3 sig0 = 1.0 / (1.0 + exp(DPX_RGB_Curve * DPX_RGB_C));
         float3 sig1 = 1.0 / (1.0 + exp(-DPX_RGB_Curve * (1.0 - DPX_RGB_C)));
@@ -795,11 +792,16 @@ float4 PS_SignalBlur(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_Target
     float2 pad = GetPillarboxPadding();
     float2 activeSize = 1.0 - 2.0 * pad;
 
+    if (uv.x < pad.x || uv.x > (1.0 - pad.x) || uv.y < pad.y || uv.y > (1.0 - pad.y))
+    {
+        if (UI_PassThroughBorder)
+            return tex2D(SamplerLinear, uv);
+        return float4(0.0, 0.0, 0.0, 1.0);
+    }
+
+    // --- Linear-Space Asymmetric YIQ Composite Processing ---
     if (CMP_Enable)
     {
-        if (uv.x < pad.x || uv.x > (1.0 - pad.x) || uv.y < pad.y || uv.y > (1.0 - pad.y))
-            return float4(0.0, 0.0, 0.0, 1.0);
-
         float2 localUV = (uv - pad) / activeSize;
         float2 axis = C_TateMode ? float2(0.0, 1.0) : float2(1.0, 0.0);
         float2 texel = axis * (C_TateMode ? BUFFER_RCP_HEIGHT : BUFFER_RCP_WIDTH);
@@ -808,18 +810,26 @@ float4 PS_SignalBlur(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_Target
         float yLuma = 0.0;
         float2 iq = float2(0.0, 0.0);
 
+        // True asymmetric low-pass RC decay profile for NTSC analog signal
+        const float RC_Weights[5] = { 0.45, 0.28, 0.16, 0.08, 0.03 };
+
         [unroll]
-        for (int i = -2; i <= 2; i++)
+        for (int i = 0; i < 5; i++)
         {
-            float wt = W5(i);
             float fi = (float)i;
-            yLuma += RGBtoYIQ(ToGamma(tex2Dlod(SamplerLinear, float4(uv + texel * (fi * Blur_Width), 0, 0)).rgb)).x * wt;
-            iq    += RGBtoYIQ(ToGamma(tex2Dlod(SamplerLinear, float4(uv + texel * (fi * chromaStep), 0, 0)).rgb)).yz * wt;
+            float2 uvLuma   = clamp(uv - texel * (fi * Blur_Width), pad, 1.0 - pad);
+            float2 uvChroma = clamp(uv - texel * (fi * chromaStep), pad, 1.0 - pad);
+
+            float3 cSampleLuma   = tex2Dlod(SamplerLinear, float4(uvLuma,   0, 0)).rgb;
+            float3 cSampleChroma = tex2Dlod(SamplerLinear, float4(uvChroma, 0, 0)).rgb;
+
+            yLuma += RGBtoYIQ(cSampleLuma).x * RC_Weights[i];
+            iq    += RGBtoYIQ(cSampleChroma).yz * RC_Weights[i];
         }
 
         float2 edgeOff = (axis * activeSize) / CMP_Resolution;
-        float yA = RGBtoYIQ(ToGamma(tex2Dlod(SamplerLinear, float4(uv + edgeOff, 0, 0)).rgb)).x;
-        float yB = RGBtoYIQ(ToGamma(tex2Dlod(SamplerLinear, float4(uv - edgeOff, 0, 0)).rgb)).x;
+        float yA = RGBtoYIQ(tex2Dlod(SamplerLinear, float4(clamp(uv + edgeOff, pad, 1.0 - pad), 0, 0)).rgb).x;
+        float yB = RGBtoYIQ(tex2Dlod(SamplerLinear, float4(clamp(uv - edgeOff, pad, 1.0 - pad), 0, 0)).rgb).x;
         float edge = abs(yA - yB);
 
         float scanCoord = C_TateMode ? localUV.y : localUV.x;
@@ -831,16 +841,14 @@ float4 PS_SignalBlur(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_Target
         float phase = (srcPx * 0.5 + lineIdx + crawl) * 3.14159265;
         iq += CMP_Artifacts * edge * float2(cos(phase), sin(phase));
 
-        float3 rgb = YIQtoRGB(float3(yLuma, iq.x, iq.y));
-        return float4(FromGamma(rgb), 1.0);
+        return float4(YIQtoRGB(float3(yLuma, iq.x, iq.y)), 1.0);
     }
 
     if (!Blur_Enable)
     {
-        return tex2Dlod(SamplerLinear, float4(uv, 0.0, 0.0));
+        return tex2Dlod(SamplerLinear, float4(clamp(uv, pad, 1.0 - pad), 0.0, 0.0));
     }
 
-    // Astigmatism centered on active tube area, not monitor bezels
     float2 tubeCenterDist = (uv - pad) / max(activeSize, 0.001) - 0.5;
     float astig = 1.0 + (AST_Enable ? dot(tubeCenterDist, tubeCenterDist) * 4.0 * AST_Amount : 0.0);
     float effectiveWidth = Blur_Width * astig;
@@ -849,29 +857,29 @@ float4 PS_SignalBlur(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_Target
 
     if (Blur_Type == 1) // Asymmetric Analog RC Bleed
     {
-        float3 c = tex2Dlod(SamplerLinear, float4(uv - axis, 0, 0)).rgb * 0.15;
-        c += tex2Dlod(SamplerLinear, float4(uv, 0, 0)).rgb * 0.38;
-        c += tex2Dlod(SamplerLinear, float4(uv + axis * (1.0 * RC_Bleed), 0, 0)).rgb * 0.24;
-        c += tex2Dlod(SamplerLinear, float4(uv + axis * (2.0 * RC_Bleed), 0, 0)).rgb * 0.15;
-        c += tex2Dlod(SamplerLinear, float4(uv + axis * (3.0 * RC_Bleed), 0, 0)).rgb * 0.08;
+        float3 c = tex2Dlod(SamplerLinear, float4(clamp(uv - axis, pad, 1.0 - pad), 0, 0)).rgb * 0.15;
+        c += tex2Dlod(SamplerLinear, float4(clamp(uv, pad, 1.0 - pad), 0, 0)).rgb * 0.38;
+        c += tex2Dlod(SamplerLinear, float4(clamp(uv + axis * (1.0 * RC_Bleed), pad, 1.0 - pad), 0, 0)).rgb * 0.24;
+        c += tex2Dlod(SamplerLinear, float4(clamp(uv + axis * (2.0 * RC_Bleed), pad, 1.0 - pad), 0, 0)).rgb * 0.15;
+        c += tex2Dlod(SamplerLinear, float4(clamp(uv + axis * (3.0 * RC_Bleed), pad, 1.0 - pad), 0, 0)).rgb * 0.08;
         return float4(c, 1.0);
     }
-    else if (Blur_Type == 2) // Flyback Focus Defocus (Dual-Axis)
+
+    if (Blur_Type == 2) // Flyback Focus Defocus (Dual-Axis)
     {
         float2 stepY = (C_TateMode ? float2(BUFFER_RCP_WIDTH, 0.0) : float2(0.0, BUFFER_RCP_HEIGHT)) * effectiveWidth * 0.40;
-        float3 c = tex2Dlod(SamplerLinear, float4(uv, 0, 0)).rgb * 0.36;
-        c += (tex2Dlod(SamplerLinear, float4(uv + axis, 0, 0)).rgb + tex2Dlod(SamplerLinear, float4(uv - axis, 0, 0)).rgb) * 0.22;
-        c += (tex2Dlod(SamplerLinear, float4(uv + axis * 2.0, 0, 0)).rgb + tex2Dlod(SamplerLinear, float4(uv - axis * 2.0, 0, 0)).rgb) * 0.06;
-        c += (tex2Dlod(SamplerLinear, float4(uv + stepY, 0, 0)).rgb + tex2Dlod(SamplerLinear, float4(uv - stepY, 0, 0)).rgb) * 0.04;
+        float3 c = tex2Dlod(SamplerLinear, float4(clamp(uv, pad, 1.0 - pad), 0, 0)).rgb * 0.36;
+        c += (tex2Dlod(SamplerLinear, float4(clamp(uv + axis, pad, 1.0 - pad), 0, 0)).rgb + tex2Dlod(SamplerLinear, float4(clamp(uv - axis, pad, 1.0 - pad), 0, 0)).rgb) * 0.22;
+        c += (tex2Dlod(SamplerLinear, float4(clamp(uv + axis * 2.0, pad, 1.0 - pad), 0, 0)).rgb + tex2Dlod(SamplerLinear, float4(clamp(uv - axis * 2.0, pad, 1.0 - pad), 0, 0)).rgb) * 0.06;
+        c += (tex2Dlod(SamplerLinear, float4(clamp(uv + stepY, pad, 1.0 - pad), 0, 0)).rgb + tex2Dlod(SamplerLinear, float4(clamp(uv - stepY, pad, 1.0 - pad), 0, 0)).rgb) * 0.04;
         return float4(c, 1.0);
     }
-    else // Symmetric 5-Tap Gaussian
-    {
-        float3 c = tex2Dlod(SamplerLinear, float4(uv, 0, 0)).rgb * 0.375;
-        c += (tex2Dlod(SamplerLinear, float4(uv + axis, 0, 0)).rgb       + tex2Dlod(SamplerLinear, float4(uv - axis, 0, 0)).rgb)       * 0.25;
-        c += (tex2Dlod(SamplerLinear, float4(uv + axis * 2.0, 0, 0)).rgb + tex2Dlod(SamplerLinear, float4(uv - axis * 2.0, 0, 0)).rgb) * 0.0625;
-        return float4(c, 1.0);
-    }
+
+    // Default Fallback: Symmetric 5-Tap Gaussian
+    float3 c = tex2Dlod(SamplerLinear, float4(clamp(uv, pad, 1.0 - pad), 0, 0)).rgb * 0.375;
+    c += (tex2Dlod(SamplerLinear, float4(clamp(uv + axis, pad, 1.0 - pad), 0, 0)).rgb       + tex2Dlod(SamplerLinear, float4(clamp(uv - axis, pad, 1.0 - pad), 0, 0)).rgb)       * 0.25;
+    c += (tex2Dlod(SamplerLinear, float4(clamp(uv + axis * 2.0, pad, 1.0 - pad), 0, 0)).rgb + tex2Dlod(SamplerLinear, float4(clamp(uv - axis * 2.0, pad, 1.0 - pad), 0, 0)).rgb) * 0.0625;
+    return float4(c, 1.0);
 }
 
 // Pass 3: Phosphor Persistence Update
@@ -889,7 +897,7 @@ float4 PS_PersistUpdate(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_Tar
 // Pass 4: Phosphor Persistence Copy
 float4 PS_PersistCopy(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_Target
 {
-    if (!P_Enable) discard; // Bypass memory write when persistence is inactive
+    if (!P_Enable) discard;
     return tex2Dlod(SamplerPersistCur, float4(uv, 0, 0));
 }
 
@@ -898,13 +906,17 @@ float4 PS_Halation_H(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_Target
 {
     if (!H_Enable || H_Strength <= 0.0) discard;
 
+    float2 pad = GetPillarboxPadding();
+    if (uv.x < pad.x || uv.x > (1.0 - pad.x) || uv.y < pad.y || uv.y > (1.0 - pad.y))
+        return float4(0.0, 0.0, 0.0, 1.0);
+
     float2 stepVec = float2(BUFFER_RCP_WIDTH * 2.0 * H_Radius * (BUFFER_HEIGHT / 1080.0), 0.0);
 
     float3 result = HaloGate(tex2Dlod(CRT_SIGNAL_SAMPLER, float4(uv, 0, 0)).rgb) * 0.227027;
-    result += (HaloGate(tex2Dlod(CRT_SIGNAL_SAMPLER, float4(uv + stepVec * 1.0, 0, 0)).rgb) + HaloGate(tex2Dlod(CRT_SIGNAL_SAMPLER, float4(uv - stepVec * 1.0, 0, 0)).rgb)) * 0.1945946;
-    result += (HaloGate(tex2Dlod(CRT_SIGNAL_SAMPLER, float4(uv + stepVec * 2.0, 0, 0)).rgb) + HaloGate(tex2Dlod(CRT_SIGNAL_SAMPLER, float4(uv - stepVec * 2.0, 0, 0)).rgb)) * 0.1216216;
-    result += (HaloGate(tex2Dlod(CRT_SIGNAL_SAMPLER, float4(uv + stepVec * 3.0, 0, 0)).rgb) + HaloGate(tex2Dlod(CRT_SIGNAL_SAMPLER, float4(uv - stepVec * 3.0, 0, 0)).rgb)) * 0.0540540;
-    result += (HaloGate(tex2Dlod(CRT_SIGNAL_SAMPLER, float4(uv + stepVec * 4.0, 0, 0)).rgb) + HaloGate(tex2Dlod(CRT_SIGNAL_SAMPLER, float4(uv - stepVec * 4.0, 0, 0)).rgb)) * 0.0162160;
+    result += (HaloGate(tex2Dlod(CRT_SIGNAL_SAMPLER, float4(clamp(uv + stepVec * 1.0, pad, 1.0 - pad), 0, 0)).rgb) + HaloGate(tex2Dlod(CRT_SIGNAL_SAMPLER, float4(clamp(uv - stepVec * 1.0, pad, 1.0 - pad), 0, 0)).rgb)) * 0.1945946;
+    result += (HaloGate(tex2Dlod(CRT_SIGNAL_SAMPLER, float4(clamp(uv + stepVec * 2.0, pad, 1.0 - pad), 0, 0)).rgb) + HaloGate(tex2Dlod(CRT_SIGNAL_SAMPLER, float4(clamp(uv - stepVec * 2.0, pad, 1.0 - pad), 0, 0)).rgb)) * 0.1216216;
+    result += (HaloGate(tex2Dlod(CRT_SIGNAL_SAMPLER, float4(clamp(uv + stepVec * 3.0, pad, 1.0 - pad), 0, 0)).rgb) + HaloGate(tex2Dlod(CRT_SIGNAL_SAMPLER, float4(clamp(uv - stepVec * 3.0, pad, 1.0 - pad), 0, 0)).rgb)) * 0.0540540;
+    result += (HaloGate(tex2Dlod(CRT_SIGNAL_SAMPLER, float4(clamp(uv + stepVec * 4.0, pad, 1.0 - pad), 0, 0)).rgb) + HaloGate(tex2Dlod(CRT_SIGNAL_SAMPLER, float4(clamp(uv - stepVec * 4.0, pad, 1.0 - pad), 0, 0)).rgb)) * 0.0162160;
 
     return float4(result, 1.0);
 }
@@ -914,13 +926,17 @@ float4 PS_Halation_V(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_Target
 {
     if (!H_Enable || H_Strength <= 0.0) discard;
 
+    float2 pad = GetPillarboxPadding();
+    if (uv.x < pad.x || uv.x > (1.0 - pad.x) || uv.y < pad.y || uv.y > (1.0 - pad.y))
+        return float4(0.0, 0.0, 0.0, 1.0);
+
     float2 stepVec = float2(0.0, BUFFER_RCP_HEIGHT * 2.0 * H_Radius * (BUFFER_HEIGHT / 1080.0));
 
     float3 result = tex2Dlod(SamplerHalationH, float4(uv, 0, 0)).rgb * 0.227027;
-    result += (tex2Dlod(SamplerHalationH, float4(uv + stepVec * 1.0, 0, 0)).rgb + tex2Dlod(SamplerHalationH, float4(uv - stepVec * 1.0, 0, 0)).rgb) * 0.1945946;
-    result += (tex2Dlod(SamplerHalationH, float4(uv + stepVec * 2.0, 0, 0)).rgb + tex2Dlod(SamplerHalationH, float4(uv - stepVec * 2.0, 0, 0)).rgb) * 0.1216216;
-    result += (tex2Dlod(SamplerHalationH, float4(uv + stepVec * 3.0, 0, 0)).rgb + tex2Dlod(SamplerHalationH, float4(uv - stepVec * 3.0, 0, 0)).rgb) * 0.0540540;
-    result += (tex2Dlod(SamplerHalationH, float4(uv + stepVec * 4.0, 0, 0)).rgb + tex2Dlod(SamplerHalationH, float4(uv - stepVec * 4.0, 0, 0)).rgb) * 0.0162160;
+    result += (tex2Dlod(SamplerHalationH, float4(clamp(uv + stepVec * 1.0, pad, 1.0 - pad), 0, 0)).rgb + tex2Dlod(SamplerHalationH, float4(clamp(uv - stepVec * 1.0, pad, 1.0 - pad), 0, 0)).rgb) * 0.1945946;
+    result += (tex2Dlod(SamplerHalationH, float4(clamp(uv + stepVec * 2.0, pad, 1.0 - pad), 0, 0)).rgb + tex2Dlod(SamplerHalationH, float4(clamp(uv - stepVec * 2.0, pad, 1.0 - pad), 0, 0)).rgb) * 0.1216216;
+    result += (tex2Dlod(SamplerHalationH, float4(clamp(uv + stepVec * 3.0, pad, 1.0 - pad), 0, 0)).rgb + tex2Dlod(SamplerHalationH, float4(clamp(uv - stepVec * 3.0, pad, 1.0 - pad), 0, 0)).rgb) * 0.0540540;
+    result += (tex2Dlod(SamplerHalationH, float4(clamp(uv + stepVec * 4.0, pad, 1.0 - pad), 0, 0)).rgb + tex2Dlod(SamplerHalationH, float4(clamp(uv - stepVec * 4.0, pad, 1.0 - pad), 0, 0)).rgb) * 0.0162160;
 
     return float4(result, 1.0);
 }
@@ -929,6 +945,10 @@ float4 PS_Halation_V(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_Target
 float4 PS_GlowDown(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_Target
 {
     if (!GL_Enable || GL_Strength <= 0.0) discard;
+
+    float2 pad = GetPillarboxPadding();
+    if (uv.x < pad.x || uv.x > (1.0 - pad.x) || uv.y < pad.y || uv.y > (1.0 - pad.y))
+        return float4(0.0, 0.0, 0.0, 1.0);
 
     float3 sum = float3(0.0, 0.0, 0.0);
 
@@ -939,7 +959,7 @@ float4 PS_GlowDown(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_Target
         for (int iy = 0; iy < 4; iy++)
         {
             float2 o = (float2((float)ix, (float)iy) - 1.5) * 2.0 * BUFFER_PIXEL_SIZE;
-            sum += GlowGate(tex2Dlod(CRT_SIGNAL_SAMPLER, float4(uv + o, 0.0, 0.0)).rgb, GL_Threshold);
+            sum += GlowGate(tex2Dlod(CRT_SIGNAL_SAMPLER, float4(clamp(uv + o, pad, 1.0 - pad), 0.0, 0.0)).rgb, GL_Threshold);
         }
     }
 
@@ -951,13 +971,17 @@ float4 PS_GlowH(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_Target
 {
     if (!GL_Enable || GL_Strength <= 0.0) discard;
 
+    float2 pad = GetPillarboxPadding();
+    if (uv.x < pad.x || uv.x > (1.0 - pad.x) || uv.y < pad.y || uv.y > (1.0 - pad.y))
+        return float4(0.0, 0.0, 0.0, 1.0);
+
     float2 stepVec = float2(BUFFER_RCP_WIDTH * 8.0 * GL_Radius * (BUFFER_HEIGHT / 1080.0), 0.0);
 
     float3 result = tex2Dlod(SamplerGlowA, float4(uv, 0, 0)).rgb * 0.227027;
-    result += (tex2Dlod(SamplerGlowA, float4(uv + stepVec * 1.0, 0, 0)).rgb + tex2Dlod(SamplerGlowA, float4(uv - stepVec * 1.0, 0, 0)).rgb) * 0.1945946;
-    result += (tex2Dlod(SamplerGlowA, float4(uv + stepVec * 2.0, 0, 0)).rgb + tex2Dlod(SamplerGlowA, float4(uv - stepVec * 2.0, 0, 0)).rgb) * 0.1216216;
-    result += (tex2Dlod(SamplerGlowA, float4(uv + stepVec * 3.0, 0, 0)).rgb + tex2Dlod(SamplerGlowA, float4(uv - stepVec * 3.0, 0, 0)).rgb) * 0.0540540;
-    result += (tex2Dlod(SamplerGlowA, float4(uv + stepVec * 4.0, 0, 0)).rgb + tex2Dlod(SamplerGlowA, float4(uv - stepVec * 4.0, 0, 0)).rgb) * 0.0162160;
+    result += (tex2Dlod(SamplerGlowA, float4(clamp(uv + stepVec * 1.0, pad, 1.0 - pad), 0, 0)).rgb + tex2Dlod(SamplerGlowA, float4(clamp(uv - stepVec * 1.0, pad, 1.0 - pad), 0, 0)).rgb) * 0.1945946;
+    result += (tex2Dlod(SamplerGlowA, float4(clamp(uv + stepVec * 2.0, pad, 1.0 - pad), 0, 0)).rgb + tex2Dlod(SamplerGlowA, float4(clamp(uv - stepVec * 2.0, pad, 1.0 - pad), 0, 0)).rgb) * 0.1216216;
+    result += (tex2Dlod(SamplerGlowA, float4(clamp(uv + stepVec * 3.0, pad, 1.0 - pad), 0, 0)).rgb + tex2Dlod(SamplerGlowA, float4(clamp(uv - stepVec * 3.0, pad, 1.0 - pad), 0, 0)).rgb) * 0.0540540;
+    result += (tex2Dlod(SamplerGlowA, float4(clamp(uv + stepVec * 4.0, pad, 1.0 - pad), 0, 0)).rgb + tex2Dlod(SamplerGlowA, float4(clamp(uv - stepVec * 4.0, pad, 1.0 - pad), 0, 0)).rgb) * 0.0162160;
 
     return float4(result, 1.0);
 }
@@ -967,13 +991,17 @@ float4 PS_GlowV(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_Target
 {
     if (!GL_Enable || GL_Strength <= 0.0) discard;
 
+    float2 pad = GetPillarboxPadding();
+    if (uv.x < pad.x || uv.x > (1.0 - pad.x) || uv.y < pad.y || uv.y > (1.0 - pad.y))
+        return float4(0.0, 0.0, 0.0, 1.0);
+
     float2 stepVec = float2(0.0, BUFFER_RCP_HEIGHT * 8.0 * GL_Radius * (BUFFER_HEIGHT / 1080.0));
 
     float3 result = tex2Dlod(SamplerGlowB, float4(uv, 0, 0)).rgb * 0.227027;
-    result += (tex2Dlod(SamplerGlowB, float4(uv + stepVec * 1.0, 0, 0)).rgb + tex2Dlod(SamplerGlowB, float4(uv - stepVec * 1.0, 0, 0)).rgb) * 0.1945946;
-    result += (tex2Dlod(SamplerGlowB, float4(uv + stepVec * 2.0, 0, 0)).rgb + tex2Dlod(SamplerGlowB, float4(uv - stepVec * 2.0, 0, 0)).rgb) * 0.1216216;
-    result += (tex2Dlod(SamplerGlowB, float4(uv + stepVec * 3.0, 0, 0)).rgb + tex2Dlod(SamplerGlowB, float4(uv - stepVec * 3.0, 0, 0)).rgb) * 0.0540540;
-    result += (tex2Dlod(SamplerGlowB, float4(uv + stepVec * 4.0, 0, 0)).rgb + tex2Dlod(SamplerGlowB, float4(uv - stepVec * 4.0, 0, 0)).rgb) * 0.0162160;
+    result += (tex2Dlod(SamplerGlowB, float4(clamp(uv + stepVec * 1.0, pad, 1.0 - pad), 0, 0)).rgb + tex2Dlod(SamplerGlowB, float4(clamp(uv - stepVec * 1.0, pad, 1.0 - pad), 0, 0)).rgb) * 0.1945946;
+    result += (tex2Dlod(SamplerGlowB, float4(clamp(uv + stepVec * 2.0, pad, 1.0 - pad), 0, 0)).rgb + tex2Dlod(SamplerGlowB, float4(clamp(uv - stepVec * 2.0, pad, 1.0 - pad), 0, 0)).rgb) * 0.1216216;
+    result += (tex2Dlod(SamplerGlowB, float4(clamp(uv + stepVec * 3.0, pad, 1.0 - pad), 0, 0)).rgb + tex2Dlod(SamplerGlowB, float4(clamp(uv - stepVec * 3.0, pad, 1.0 - pad), 0, 0)).rgb) * 0.0540540;
+    result += (tex2Dlod(SamplerGlowB, float4(clamp(uv + stepVec * 4.0, pad, 1.0 - pad), 0, 0)).rgb + tex2Dlod(SamplerGlowB, float4(clamp(uv - stepVec * 4.0, pad, 1.0 - pad), 0, 0)).rgb) * 0.0162160;
 
     return float4(result, 1.0);
 }
@@ -984,12 +1012,16 @@ float4 PS_Raster_Composite(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_
     float2 pad = GetPillarboxPadding();
     float2 activeSize = 1.0 - 2.0 * pad;
 
+    // Boundary Check: cleanly pass-through MAME artwork or clip to black
     if (uv.x < pad.x || uv.x > (1.0 - pad.x) || uv.y < pad.y || uv.y > (1.0 - pad.y))
+    {
+        if (UI_PassThroughBorder)
+            return tex2D(ReShade::BackBuffer, uv);
         return float4(0.0, 0.0, 0.0, 1.0);
+    }
 
     float2 localUV = (uv - pad) / activeSize;
 
-    // High-Voltage Anode Sag (Aspect/Ultrawide-Safe)
     if (HV_Enable)
     {
         float3 lumaW = float3(0.2126, 0.7152, 0.0722);
@@ -1004,14 +1036,13 @@ float4 PS_Raster_Composite(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_
 
     float2 warpedLocalUV = WarpCoords(localUV);
 
-    // Bezel Shroud Detection & Exact Piecewise Corner SDF
     float maskClip = 1.0;
     float corner = 0.0;
     if (G_EnableCurvature || G_CornerSize > 0.0001)
     {
         float r = G_CornerSize;
         float2 cd = abs(warpedLocalUV - 0.5) - 0.5 + r;
-        corner = (r > 0.0001) 
+        corner = (r > 0.0001)
             ? (length(max(cd, 0.0)) + min(max(cd.x, cd.y), 0.0) - r)
             : max(cd.x, cd.y);
         maskClip = 1.0 - smoothstep(0.0, 0.005, corner);
@@ -1019,11 +1050,11 @@ float4 PS_Raster_Composite(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_
 
     float2 clampedWarpedUV = clamp(warpedLocalUV, 0.0005, 0.9995);
 
-    // Deflection yoke deconvergence
+    // Branchless deconvergence offset calculation
     float2 centerDist = clampedWarpedUV - 0.5;
     float radialFactor = dot(centerDist, centerDist) * D_RadialYoke * 4.0;
-    float2 shift = (D_StaticShift + centerDist * radialFactor) * BUFFER_PIXEL_SIZE;
-    bool hasDecon = (dot(D_StaticShift, D_StaticShift) + D_RadialYoke > 0.00001);
+    float masterDeconTrigger = saturate((dot(D_StaticShift, D_StaticShift) + D_RadialYoke) * 10000.0);
+    float2 shift = (D_StaticShift + centerDist * radialFactor) * BUFFER_PIXEL_SIZE * masterDeconTrigger;
 
     // Scanlines
     float targetLines = GetTargetLines();
@@ -1045,23 +1076,17 @@ float4 PS_Raster_Composite(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_
     {
         float centerLocal = clamp((lineBase + (float)k + 0.5) / targetLines, 0.0005, 0.9995);
 
-        float2 lineCenterLocalUV = C_TateMode 
-            ? float2(centerLocal, clampedWarpedUV.y) 
+        float2 lineCenterLocalUV = C_TateMode
+            ? float2(centerLocal, clampedWarpedUV.y)
             : float2(clampedWarpedUV.x, centerLocal);
 
         float2 sampleLineUV = pad + lineCenterLocalUV * activeSize;
 
+        // Branchless RGB channel sample
         float3 c;
-        if (hasDecon)
-        {
-            c.r = tex2Dlod(CRT_SIGNAL_SAMPLER, float4(sampleLineUV + shift, 0.0, 0.0)).r;
-            c.g = tex2Dlod(CRT_SIGNAL_SAMPLER, float4(sampleLineUV,         0.0, 0.0)).g;
-            c.b = tex2Dlod(CRT_SIGNAL_SAMPLER, float4(sampleLineUV - shift, 0.0, 0.0)).b;
-        }
-        else
-        {
-            c = tex2Dlod(CRT_SIGNAL_SAMPLER, float4(sampleLineUV, 0.0, 0.0)).rgb;
-        }
+        c.r = tex2Dlod(CRT_SIGNAL_SAMPLER, float4(sampleLineUV + shift, 0.0, 0.0)).r;
+        c.g = tex2Dlod(CRT_SIGNAL_SAMPLER, float4(sampleLineUV,         0.0, 0.0)).g;
+        c.b = tex2Dlod(CRT_SIGNAL_SAMPLER, float4(sampleLineUV - shift, 0.0, 0.0)).b;
 
         float beam = BeamWeight(dist - (float)k, c);
 
@@ -1074,7 +1099,6 @@ float4 PS_Raster_Composite(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_
         color += c * beam;
     }
 
-    // Dynamic highlight gain
     float rawLuma = max(max(color.r, color.g), color.b);
     float dynamicGain = lerp(B_Gain, 1.0, pow(saturate(rawLuma), 1.5));
     color *= dynamicGain;
@@ -1089,7 +1113,7 @@ float4 PS_Raster_Composite(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_
 
     if (M_Type == 1) // Aperture Grille
     {
-        if (M_SubpixelMode == 2) // WOLED 4-subpixel
+        if (M_SubpixelMode == 2)
         {
             int x = px % 4;
             if (x == 0)      mask = float3(1.0, 1.0 - M_Strength, 1.0 - M_Strength);
@@ -1115,14 +1139,10 @@ float4 PS_Raster_Composite(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_
         else if (x == 1) triad.g = 1.0;
         else triad.b = 1.0;
 
-        float slot = 1.0;
         int x6 = px % 6;
-        if ((x6 < 3 && y == 0) || (x6 >= 3 && y == 2))
-            slot = 1.0 - M_Strength * 0.75;
-
+        float slot = ((x6 < 3 && y == 0) || (x6 >= 3 && y == 2)) ? (1.0 - M_Strength * 0.75) : 1.0;
         mask = triad * slot;
 
-        // Ensure white subpixel attenuation on WOLED without breaking slot structure
         if (M_SubpixelMode == 2 && (px % 4 == 3))
             mask *= (1.0 - M_Strength * 0.35);
     }
@@ -1137,15 +1157,13 @@ float4 PS_Raster_Composite(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_
         else if (x == 1 && y != 1) mask.g = 1.0;
         else if (x == 2 && y != 2) mask.b = 1.0;
 
-        // Ensure white subpixel attenuation on WOLED without breaking triad structure
         if (M_SubpixelMode == 2 && (px % 4 == 3))
             mask *= (1.0 - M_Strength * 0.35);
     }
 
-    if (M_SubpixelMode == 1) mask = mask.bgr; // Inverted BGR panel layout
-    else if (M_SubpixelMode == 3) mask = lerp(mask, dot(mask, 0.3333).xxx, 0.20); // QD-OLED triangular layout
+    if (M_SubpixelMode == 1) mask = mask.bgr;
+    else if (M_SubpixelMode == 3) mask = lerp(mask, dot(mask, 0.3333).xxx, 0.20);
 
-    // Auto-compensation for mask attenuation
     float maskTransmission = dot(mask, float3(0.3333, 0.3333, 0.3333));
     float autoFactor = 1.0 / max(maskTransmission, 0.15);
     color *= lerp(1.0, autoFactor, M_AutoComp);
@@ -1154,7 +1172,6 @@ float4 PS_Raster_Composite(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_
     mask = lerp(mask, float3(1.0, 1.0, 1.0), pow(saturate(luma), 1.5) * M_Bloom);
     color *= mask * M_BrightBoost;
 
-    // Sony Trinitron Damper Wires (Resolution-scaled)
     if (W_Enable)
     {
         float wireY = C_TateMode ? warpedLocalUV.x : warpedLocalUV.y;
@@ -1168,7 +1185,6 @@ float4 PS_Raster_Composite(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_
         color *= lerp(1.0 - W_Opacity, 1.0, wire);
     }
 
-    // Rolling AC Ground Hum Bar
     if (HB_Enable)
     {
         float humCoord = C_TateMode ? clampedWarpedUV.x : clampedWarpedUV.y;
@@ -1185,7 +1201,6 @@ float4 PS_Raster_Composite(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_
     if (GL_Enable && GL_Strength > 0.0)
         color += tex2Dlod(SamplerGlowA, float4(sampleUV, 0.0, 0.0)).rgb * GL_Strength;
 
-    // Cabinet Bezel Reflection (Calculated in linear space)
     float3 bezel = float3(0.0, 0.0, 0.0);
     if (BZ_Enable && corner > 0.0 && corner < BZ_Width)
     {
@@ -1195,16 +1210,20 @@ float4 PS_Raster_Composite(float4 pos : SV_Position, float2 uv : TEXCOORD) : SV_
         bezel = edgeLight * bezelProfile * BZ_Strength;
     }
 
-    // Composite bezel and tube content in linear color space
     color = lerp(bezel, color, maskClip);
-
-    // Output gamma conversion & black level calibration
     color = pow(max(color, 0.0), 1.0 / COL_OutputGamma);
     color = max(color + COL_BlackLevel.xxx, 0.0);
 
-    // Cleanly anchor unused chassis area to true black (prevents positive black-level bleed)
     float outerClip = saturate(maskClip + (BZ_Enable ? smoothstep(BZ_Width, 0.0, corner) : 0.0));
-    color *= outerClip;
+    
+    if (UI_PassThroughBorder)
+    {
+        color = lerp(tex2D(ReShade::BackBuffer, uv).rgb, color, outerClip);
+    }
+    else
+    {
+        color *= outerClip;
+    }
 
     return float4(color, 1.0);
 }
