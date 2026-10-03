@@ -19,8 +19,6 @@ Im not claiming to be an expert on the visuals/colors it just looks decent to me
 ## ✨ CRT-Mame-Advance-Four
 Added my custom ReShade Shader, [CRT-Mame-Advance-four.fx](https://github.com/JBW-byte/CRT-Mame-Advance-Four)  .Add to mame\reshade-shaders\Shaders folder, deselect all other options in reshade and turn off bgfx. Covers most of the settings in one shader, many options.
 
-• Advanced Display Matching: Custom layouts engineered specifically to look correct on standard LCD, WOLED, and QD-OLED screens.
-
 • Authentic CRT Imperfections: Recreates physical tube curvature, scanlines, aperture grille masks, Sony damper wires, high-voltage screen "breathing," and rolling power hum bars.
 
 
