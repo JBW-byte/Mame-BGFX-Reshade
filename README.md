@@ -5,7 +5,7 @@
 Bring authentic CRT vibes back to your MAME experience!
 This setup combines BGFX screen chains with ReShade shaders for customizable scanlines, brightness, and image effects. Perfect for retro gaming enthusiasts who want that classic arcade look.  
 
-Im not claiming to be an expert on the visuals/colors it just looks decent to me.
+Im not claiming to be an expert on the visuals/colors. BGFX is great on it own with my custom CRT-Geom_deluxe.json for performance.
 
 
 ## ✨ Features
@@ -18,10 +18,6 @@ Im not claiming to be an expert on the visuals/colors it just looks decent to me
 
 ## ✨ CRT-Mame-Advance-Four
 Added my custom ReShade Shader, [CRT-Mame-Advance-four.fx](https://github.com/JBW-byte/CRT-Mame-Advance-Four)  .Add to mame\reshade-shaders\Shaders folder, deselect all other options in reshade and turn off bgfx. Covers most of the settings in one shader, many options.
-
-• Authentic CRT Imperfections: Recreates physical tube curvature, scanlines, aperture grille masks, Sony damper wires, high-voltage screen "breathing," and rolling power hum bars.
-
-
 
 
 ## ⚙️ Requirements
