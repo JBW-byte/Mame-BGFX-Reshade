@@ -1,4 +1,4 @@
-# 🎮 MAME BGFX + ReShade Scanline CRT Setup
+# 🎮 MAME BGFX + ReShade Scanline CRT Setup   [![Ko-fi](https://img.shields.io/badge/Ko--fi-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/led_jbw)
 
 
 
